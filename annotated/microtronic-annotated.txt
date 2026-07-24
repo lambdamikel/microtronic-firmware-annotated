@@ -1114,66 +1114,67 @@
 # -----------------------------------------------------------------------------
 # Page 10
 
-    LDP    3        # 10:00 (10:00) 1c  -  
+    # === OPCODE DISPATCH. Decode command digit M(1,2) via an ACxAC (add-const, test-carry) ladder that catches F,E,...,5 in turn; 0-4 fall through to the second-level table on page 11. Each arm is an LDP p / BR off to that opcode's handler. ===
+    LDP    3        # 10:00 (10:00) 1c  -  prep before decode (calls 13:14) ...
     CALL   14       # 10:01 (10:01) f5  -  
-    LDX    1        # 10:02 (10:03) 2c  -  
+    LDX    1        # 10:02 (10:03) 2c  -  read the command digit ...
     TCY    2        # 10:03 (10:07) 44  -  
-    TMA             # 10:04 (10:0f) 21  -  
-    ACxAC  0        # 10:05 (10:1f) 70  -  
-    BR     3b       # 10:06 (10:3f) aa  -  
+    TMA             # 10:04 (10:0f) 21  -  A = M(1,2) = command digit (0..F)
+    ACxAC  0        # 10:05 (10:1f) 70  -  A+1 > 15 ?  i.e. command == F(15)
+    BR     3b       # 10:06 (10:3f) aa  -  F-group -> 11:17
     TMA             # 10:07 (10:3e) 21  -  
-    ACxAC  1        # 10:08 (10:3d) 78  -  
+    ACxAC  1        # 10:08 (10:3d) 78  -  command == E(14) ? -> BRZ
     BR     39       # 10:09 (10:3b) 8a  -  
     TMA             # 10:0a (10:37) 21  -  
-    ACxAC  2        # 10:0b (10:2f) 74  -  
+    ACxAC  2        # 10:0b (10:2f) 74  -  command == D(13) ? -> BRC
     BR     37       # 10:0c (10:1e) b2  -  
     TMA             # 10:0d (10:3c) 21  -  
-    ACxAC  3        # 10:0e (10:39) 7c  -  
+    ACxAC  3        # 10:0e (10:39) 7c  -  command == C(12) ? -> GOTO
     BR     35       # 10:0f (10:33) 8c  -  
     TMA             # 10:10 (10:27) 21  -  
-    ACxAC  4        # 10:11 (10:0e) 72  -  
+    ACxAC  4        # 10:11 (10:0e) 72  -  command == B(11) ? -> CALL
     BR     33       # 10:12 (10:1d) 93  -  
     TMA             # 10:13 (10:3a) 21  -  
-    ACxAC  5        # 10:14 (10:35) 7a  -  
+    ACxAC  5        # 10:14 (10:35) 7a  -  command == A(10) ? -> OR
     BR     31       # 10:15 (10:2b) 84  -  
     TMA             # 10:16 (10:16) 21  -  
-    ACxAC  6        # 10:17 (10:2c) 76  -  
+    ACxAC  6        # 10:17 (10:2c) 76  -  command == 9 ? -> CMPI
     BR     2f       # 10:18 (10:18) 91  -  
     TMA             # 10:19 (10:30) 21  -  
-    ACxAC  7        # 10:1a (10:21) 7e  -  
+    ACxAC  7        # 10:1a (10:21) 7e  -  command == 8 ? -> CMP
     BR     2d       # 10:1b (10:02) a4  -  
     TMA             # 10:1c (10:05) 21  -  
-    ACxAC  8        # 10:1d (10:0b) 71  -  
+    ACxAC  8        # 10:1d (10:0b) 71  -  command == 7 ? -> SUBI
     BR     2b       # 10:1e (10:17) a9  -  
     TMA             # 10:1f (10:2e) 21  -  
-    ACxAC  9        # 10:20 (10:1c) 79  -  
+    ACxAC  9        # 10:20 (10:1c) 79  -  command == 6 ? -> SUB
     BR     29       # 10:21 (10:38) 9a  -  
     TMA             # 10:22 (10:31) 21  -  
-    ACxAC  a        # 10:23 (10:23) 75  -  
+    ACxAC  a        # 10:23 (10:23) 75  -  command == 5 ? -> ADDI
     BR     27       # 10:24 (10:06) b6  -  
-    LDP    1        # 10:25 (10:0d) 18  -  
+    LDP    1        # 10:25 (10:0d) 18  -  command 0..4 -> second-level dispatch at 11:00
     BR     00       # 10:26 (10:1b) 80  -  
-    LDP    7        # 10:27 (10:36) 1e  -  
+    LDP    7        # 10:27 (10:36) 1e  -  opcode 5 ADDI  -> 17:1d
     BR     1d       # 10:28 (10:2d) 8b  -  
-    LDP    6        # 10:29 (10:1a) 16  -  
+    LDP    6        # 10:29 (10:1a) 16  -  opcode 6 SUB   -> 16:1b
     BR     1b       # 10:2a (10:34) 82  -  
-    LDP    6        # 10:2b (10:29) 16  -  
+    LDP    6        # 10:2b (10:29) 16  -  opcode 7 SUBI  -> 16:16
     BR     16       # 10:2c (10:12) 96  -  
-    LDP    6        # 10:2d (10:24) 16  -  
+    LDP    6        # 10:2d (10:24) 16  -  opcode 8 CMP   -> 16:03
     BR     03       # 10:2e (10:08) 87  -  
-    LDP    6        # 10:2f (10:11) 16  -  
+    LDP    6        # 10:2f (10:11) 16  -  opcode 9 CMPI  -> 16:00
     BR     00       # 10:30 (10:22) 80  -  
-    LDP    c        # 10:31 (10:04) 13  -  
+    LDP    c        # 10:31 (10:04) 13  -  opcode A OR    -> 1c:00
     BR     00       # 10:32 (10:09) 80  -  
-    LDP    4        # 10:33 (10:13) 12  -  
+    LDP    4        # 10:33 (10:13) 12  -  opcode B CALL  -> 14:2c
     BR     2c       # 10:34 (10:26) 92  -  
-    LDP    4        # 10:35 (10:0c) 12  -  
+    LDP    4        # 10:35 (10:0c) 12  -  opcode C GOTO  -> 14:00
     BR     00       # 10:36 (10:19) 80  -  
-    LDP    4        # 10:37 (10:32) 12  -  
+    LDP    4        # 10:37 (10:32) 12  -  opcode D BRC   -> 14:1f
     BR     1f       # 10:38 (10:25) ae  -  
-    LDP    4        # 10:39 (10:0a) 12  -  
+    LDP    4        # 10:39 (10:0a) 12  -  opcode E BRZ   -> 14:27
     BR     27       # 10:3a (10:15) b6  -  
-    LDP    1        # 10:3b (10:2a) 18  -  
+    LDP    1        # 10:3b (10:2a) 18  -  opcode F Fgrp  -> 11:17
     BR     17       # 10:3c (10:14) ac  -  
     MNEA            # 10:3d (10:28) 00  -  
     MNEA            # 10:3e (10:10) 00  -  
@@ -1183,66 +1184,67 @@
 # -----------------------------------------------------------------------------
 # Page 11
 
-    TMA             # 11:00 (11:00) 21  -  
-    ACxAC  b        # 11:01 (11:01) 7d  -  
+    # === Second-level opcode dispatch: commands 0-4 (11:00), and the F-group decoded by its second digit (11:17 -> pages 18/19/1a, or 12:00 for F0-F8). ===
+    TMA             # 11:00 (11:00) 21  -  second-level dispatch for commands 0..4
+    ACxAC  b        # 11:01 (11:01) 7d  -  command == 4 (ADD)  ? -> 11:15
     BR     15       # 11:02 (11:03) ab  -  
     TMA             # 11:03 (11:07) 21  -  
-    ACxAC  c        # 11:04 (11:0f) 73  -  
+    ACxAC  c        # 11:04 (11:0f) 73  -  command == 3 (ANDI) ? -> 11:13
     BR     13       # 11:05 (11:1f) ba  -  
     TMA             # 11:06 (11:3f) 21  -  
-    ACxAC  d        # 11:07 (11:3e) 7b  -  
+    ACxAC  d        # 11:07 (11:3e) 7b  -  command == 2 (AND)  ? -> 11:11
     BR     11       # 11:08 (11:3d) 8e  -  
     TMA             # 11:09 (11:3b) 21  -  
-    ACxAC  0        # 11:0a (11:37) 70  -  
+    ACxAC  0        # 11:0a (11:37) 70  -  tell 0 from 1 (two-step: +1 then +14 tests command>=1)
     ACxAC  d        # 11:0b (11:2f) 7b  -  
-    BR     0f       # 11:0c (11:1e) b3  -  
-    LDP    7        # 11:0d (11:3c) 1e  -  
+    BR     0f       # 11:0c (11:1e) b3  -  command == 1 (MOVI) ? -> 11:0f
+    LDP    7        # 11:0d (11:3c) 1e  -  opcode 0 MOV   -> 17:25
     BR     25       # 11:0e (11:39) 8d  -  
-    LDP    7        # 11:0f (11:33) 1e  -  
+    LDP    7        # 11:0f (11:33) 1e  -  opcode 1 MOVI  -> 17:27
     BR     27       # 11:10 (11:27) b6  -  
-    LDP    5        # 11:11 (11:0e) 1a  -  
+    LDP    5        # 11:11 (11:0e) 1a  -  opcode 2 AND   -> 15:14
     BR     14       # 11:12 (11:1d) b5  -  
-    LDP    5        # 11:13 (11:3a) 1a  -  
+    LDP    5        # 11:13 (11:3a) 1a  -  opcode 3 ANDI  -> 15:0d
     BR     0d       # 11:14 (11:35) bc  -  
-    LDP    7        # 11:15 (11:2b) 1e  -  
+    LDP    7        # 11:15 (11:2b) 1e  -  opcode 4 ADD   -> 17:00
     BR     00       # 11:16 (11:16) 80  -  
-    TCY    1        # 11:17 (11:2c) 48  -  
-    TMA             # 11:18 (11:18) 21  -  
-    ACxAC  0        # 11:19 (11:30) 70  -  
+    TCY    1        # 11:17 (11:2c) 48  -  F-GROUP dispatch on the second digit M(1,1)
+    TMA             # 11:18 (11:18) 21  -  A = M(1,1) = F sub-op selector (0..F)
+    ACxAC  0        # 11:19 (11:30) 70  -  2nd digit == F ? -> FFd KIN
     BR     3b       # 11:1a (11:21) aa  -  
     TMA             # 11:1b (11:02) 21  -  
-    ACxAC  1        # 11:1c (11:05) 78  -  
+    ACxAC  1        # 11:1c (11:05) 78  -  2nd digit == E ? -> FEd DOT
     BR     39       # 11:1d (11:0b) 8a  -  
     TMA             # 11:1e (11:17) 21  -  
-    ACxAC  2        # 11:1f (11:2e) 74  -  
+    ACxAC  2        # 11:1f (11:2e) 74  -  2nd digit == D ? -> FDd DIN
     BR     37       # 11:20 (11:1c) b2  -  
     TMA             # 11:21 (11:38) 21  -  
-    ACxAC  3        # 11:22 (11:31) 7c  -  
+    ACxAC  3        # 11:22 (11:31) 7c  -  2nd digit == C ? -> FCd SUBC
     BR     35       # 11:23 (11:23) 8c  -  
     TMA             # 11:24 (11:06) 21  -  
-    ACxAC  4        # 11:25 (11:0d) 72  -  
+    ACxAC  4        # 11:25 (11:0d) 72  -  2nd digit == B ? -> FBd ADC
     BR     33       # 11:26 (11:1b) 93  -  
     TMA             # 11:27 (11:36) 21  -  
-    ACxAC  5        # 11:28 (11:2d) 7a  -  
+    ACxAC  5        # 11:28 (11:2d) 7a  -  2nd digit == A ? -> FAd SHL
     BR     31       # 11:29 (11:1a) 84  -  
     TMA             # 11:2a (11:34) 21  -  
-    ACxAC  6        # 11:2b (11:29) 76  -  
+    ACxAC  6        # 11:2b (11:29) 76  -  2nd digit == 9 ? -> F9d SHR
     BR     2f       # 11:2c (11:12) 91  -  
-    LDP    2        # 11:2d (11:24) 14  -  
+    LDP    2        # 11:2d (11:24) 14  -  2nd digit 0..8 -> 12:00 (F0x ext ops, DISP F1..F6, MAS F7, INV F8)
     BR     00       # 11:2e (11:08) 80  -  
-    LDP    a        # 11:2f (11:11) 15  -  
+    LDP    a        # 11:2f (11:11) 15  -  F9d SHR  -> 1a:00
     BR     00       # 11:30 (11:22) 80  -  
-    LDP    a        # 11:31 (11:04) 15  -  
+    LDP    a        # 11:31 (11:04) 15  -  FAd SHL  -> 1a:29
     BR     29       # 11:32 (11:09) 9a  -  
-    LDP    9        # 11:33 (11:13) 19  -  
+    LDP    9        # 11:33 (11:13) 19  -  FBd ADC  -> 19:0d
     BR     0d       # 11:34 (11:26) bc  -  
-    LDP    9        # 11:35 (11:0c) 19  -  
+    LDP    9        # 11:35 (11:0c) 19  -  FCd SUBC -> 19:00
     BR     00       # 11:36 (11:19) 80  -  
-    LDP    8        # 11:37 (11:32) 11  -  
+    LDP    8        # 11:37 (11:32) 11  -  FDd DIN  -> 18:20
     BR     20       # 11:38 (11:25) 9c  -  
-    LDP    8        # 11:39 (11:0a) 11  -  
+    LDP    8        # 11:39 (11:0a) 11  -  FEd DOT  -> 18:10
     BR     10       # 11:3a (11:15) a7  -  
-    LDP    8        # 11:3b (11:2a) 11  -  
+    LDP    8        # 11:3b (11:2a) 11  -  FFd KIN  -> 18:00
     BR     00       # 11:3c (11:14) 80  -  
     MNEA            # 11:3d (11:28) 00  -  
     MNEA            # 11:3e (11:10) 00  -  

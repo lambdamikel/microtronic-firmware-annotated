@@ -99,7 +99,7 @@ the LFSR ordering means and why the two addresses differ.
 - [x] Annotation pipeline (`dev-support/build_annotated.py` + `annotated/*.tsv`)
 - [~] `docs/02` — the Microtronic virtual machine (boot done; main loop → decode/dispatch next)
 - [x] Annotate: reset & self‑initialisation (pages `0f`, `00`)
-- [~] Annotate: the main interpreter loop and opcode dispatch (run check, fetch, PC advance, operand data path, MOV/MOVI done; 16‑way dispatch table next)
+- [x] Annotate: the main interpreter loop and opcode dispatch (run check, fetch, PC advance, operand data path, and the full two‑level opcode→handler map incl. the F‑group)
 - [ ] Annotate: 7‑segment display multiplexing and the LED/flag output
 - [ ] Annotate: the hex keypad scan and `KIN`
 - [ ] Annotate: external 2114 SRAM read/write

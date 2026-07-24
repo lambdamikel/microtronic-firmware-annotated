@@ -96,3 +96,62 @@
 17:26	MOV: R[dest] = A     -> write-back at 17:10.  Net: Rd <- Rs
 17:27	MOVI: A = immediate n (calls 17:1d)
 17:28	MOVI: R[dest] = A    -> write-back at 17:10.  Net: Rd <- n
+
+# ===== Page 10: primary opcode dispatch (chapter 1, page 0) =====
+10:00	prep before decode (calls 13:14) ...
+10:02	read the command digit ...
+10:04	A = M(1,2) = command digit (0..F)
+10:05	A+1 > 15 ?  i.e. command == F(15)
+10:06	F-group -> 11:17
+10:08	command == E(14) ? -> BRZ
+10:0b	command == D(13) ? -> BRC
+10:0e	command == C(12) ? -> GOTO
+10:11	command == B(11) ? -> CALL
+10:14	command == A(10) ? -> OR
+10:17	command == 9 ? -> CMPI
+10:1a	command == 8 ? -> CMP
+10:1d	command == 7 ? -> SUBI
+10:20	command == 6 ? -> SUB
+10:23	command == 5 ? -> ADDI
+10:25	command 0..4 -> second-level dispatch at 11:00
+10:27	opcode 5 ADDI  -> 17:1d
+10:29	opcode 6 SUB   -> 16:1b
+10:2b	opcode 7 SUBI  -> 16:16
+10:2d	opcode 8 CMP   -> 16:03
+10:2f	opcode 9 CMPI  -> 16:00
+10:31	opcode A OR    -> 1c:00
+10:33	opcode B CALL  -> 14:2c
+10:35	opcode C GOTO  -> 14:00
+10:37	opcode D BRC   -> 14:1f
+10:39	opcode E BRZ   -> 14:27
+10:3b	opcode F Fgrp  -> 11:17
+
+# ===== Page 11: secondary dispatch (0..4) and F-group (by 2nd digit) =====
+11:00	second-level dispatch for commands 0..4
+11:01	command == 4 (ADD)  ? -> 11:15
+11:04	command == 3 (ANDI) ? -> 11:13
+11:07	command == 2 (AND)  ? -> 11:11
+11:0a	tell 0 from 1 (two-step: +1 then +14 tests command>=1)
+11:0c	command == 1 (MOVI) ? -> 11:0f
+11:0d	opcode 0 MOV   -> 17:25
+11:0f	opcode 1 MOVI  -> 17:27
+11:11	opcode 2 AND   -> 15:14
+11:13	opcode 3 ANDI  -> 15:0d
+11:15	opcode 4 ADD   -> 17:00
+11:17	F-GROUP dispatch on the second digit M(1,1)
+11:18	A = M(1,1) = F sub-op selector (0..F)
+11:19	2nd digit == F ? -> FFd KIN
+11:1c	2nd digit == E ? -> FEd DOT
+11:1f	2nd digit == D ? -> FDd DIN
+11:22	2nd digit == C ? -> FCd SUBC
+11:25	2nd digit == B ? -> FBd ADC
+11:28	2nd digit == A ? -> FAd SHL
+11:2b	2nd digit == 9 ? -> F9d SHR
+11:2d	2nd digit 0..8 -> 12:00 (F0x ext ops, DISP F1..F6, MAS F7, INV F8)
+11:2f	F9d SHR  -> 1a:00
+11:31	FAd SHL  -> 1a:29
+11:33	FBd ADC  -> 19:0d
+11:35	FCd SUBC -> 19:00
+11:37	FDd DIN  -> 18:20
+11:39	FEd DOT  -> 18:10
+11:3b	FFd KIN  -> 18:00

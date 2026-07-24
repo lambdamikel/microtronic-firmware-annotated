@@ -229,12 +229,71 @@ compute → write back to `R[M(1,0)]`.** The arithmetic and logic opcodes add a
 compute step in the middle (using the two scratch operands `M(4,14)`/`M(4,15)`
 that the loop head at `1c:00` pre‑loads) and set the carry/zero flags.
 
-### 3.5 The opcode dispatch table *(next)*
+### 3.5 The opcode dispatch (page 10 → page 11)
 
-*Next on the roadmap:* the 16‑way decode on the command digit `M(1,2)` — how the
-post‑fetch code at `08:1c` and the class‑decode at `1c:06` route each of the 16
-Microtronic opcodes (`MOV`, `MOVI`, arithmetic, `CALL`/`GOTO`, the branch
-conditions, and the `F` group) to its handler.
+After the fetch, the command digit is decoded by a two‑level jump table. The
+decode trick is worth seeing: instead of a `TBIT` tree, it reloads the opcode and
+runs it through `ACxAC n` — "A ← A + n + 1, set carry if > 15" — so that a chosen
+constant makes exactly one opcode value carry:
+
+```
+10:04  TMA         ; A = M(1,2)  (command digit)
+10:05  ACxAC 0     ; A+1 > 15  <=> A == 15   -> take the F branch
+10:07  TMA         ; reload
+10:08  ACxAC 1     ; A+2 > 15  <=> A == 14   -> take the E branch
+...                ; ... catching 13,12,…,5 ...
+10:25  (fallthru)  ; A <= 4    -> second-level table at 11:00
+```
+
+Each matched arm is an `LDP p / BR off` to that opcode's handler. Opcodes 0–4
+drop to a second identical ladder on page `11`. The result is the **complete
+Microtronic instruction → firmware handler map**:
+
+| Op | Mnemonic | Form | Handler | Op | Mnemonic | Form | Handler |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `0` | `MOV s,d` | reg | `17:25` | `8` | `CMP s,d` | reg | `16:03` |
+| `1` | `MOVI n,d` | imm | `17:27` | `9` | `CMPI n,d` | imm | `16:00` |
+| `2` | `AND s,d` | reg | `15:14` | `A` | `OR s,d` | reg | `1c:00` |
+| `3` | `ANDI n,d` | imm | `15:0d` | `B` | `CALL a` | ctl | `14:2c` |
+| `4` | `ADD s,d` | reg | `17:00` | `C` | `GOTO a` | ctl | `14:00` |
+| `5` | `ADDI n,d` | imm | `17:1d` | `D` | `BRC a` | ctl | `14:1f` |
+| `6` | `SUB s,d` | reg | `16:1b` | `E` | `BRZ a` | ctl | `14:27` |
+| `7` | `SUBI n,d` | imm | `16:16` | `F` | *F‑group* | — | `11:17` |
+
+Two structural facts fall out of the handler column and confirm the decode:
+
+- **Register/immediate pairs share a page.** AND/ANDI both land on page `15`,
+  ADD/ADDI on `17`, SUB/SUBI and CMP/CMPI on `16`, MOV/MOVI on `17`. The even
+  opcode is the register form, the odd one the immediate form, and they merge
+  into a common tail after the operand is resolved (§3.3).
+- **`MOV`→`17:25` and `MOVI`→`17:27`** are exactly the two‑instruction handlers
+  decoded in §3.4 — the dispatch and the handler agree.
+
+### 3.6 The F‑group (third dispatch level)
+
+Opcode `F` is itself a family. `11:17` decodes the **second** digit `M(1,1)` with
+the same `ACxAC` ladder:
+
+| 2nd digit | Op | Handler | | 2nd digit | Op | Handler |
+| --- | --- | --- | --- | --- | --- | --- |
+| `9` | `SHR` | `1a:00` | | `D` | `DIN` | `18:20` |
+| `A` | `SHL` | `1a:29` | | `E` | `DOT` | `18:10` |
+| `B` | `ADC` | `19:0d` | | `F` | `KIN` | `18:00` |
+| `C` | `SUBC` | `19:00` | | `0`–`8` | `F0x` ext ops, `DISP`, `MAS`, `INV` | `12:00` |
+
+So `FEd`/`FDd`/`FFd` (`DOT`/`DIN`/`KIN` — the I/O opcodes) live on page `18`, the
+shift/carry ops on `19`/`1a`, and the `F0x` extended operations (`HALT`, `NOP`,
+`HXDZ`, `RND`, `TIME`, `CLEAR`, `MULT`, `DIV`, …) plus `DISP` and `MAS`/`INV` are
+reached through `12:00`.
+
+### 3.7 The opcode handlers themselves *(next)*
+
+The dispatch skeleton is complete; the remaining interpreter work is filling in
+each handler's body: the arithmetic/logic tails and the carry/zero flags (pages
+`15`/`16`/`17`/`1c`); control flow — how `GOTO`/`CALL` set the PC and how `BRC`/
+`BRZ` test the flags (page `14`); and the F‑group bodies including the I/O
+opcodes (pages `18`/`19`/`1a`/`12`). Those are the arithmetic, keypad, display,
+SRAM, and F‑op passes on the [roadmap](../README.md#roadmap-and-status).
 
 ## 4. Display, keypad, SRAM, and the F‑operations *(pending)*
 

@@ -17,3 +17,7 @@
 08:02	EXECUTE-INSTRUCTION entry: advance the program counter, then fetch the next instruction from external SRAM.
 # ---- Page 17: operand resolution & register write-back (chapter 1, page 7) ----
 17:00	Operand data path: resolve source/immediate operands into A, write results back to the destination register. Home of MOV / MOVI.
+# ---- Page 10: PRIMARY opcode dispatch (chapter 1, page 0) ----
+10:00	OPCODE DISPATCH. Decode command digit M(1,2) via an ACxAC (add-const, test-carry) ladder that catches F,E,...,5 in turn; 0-4 fall through to the second-level table on page 11. Each arm is an LDP p / BR off to that opcode's handler.
+# ---- Page 11: SECONDARY dispatch (0-4) + F-group sub-dispatch ----
+11:00	Second-level opcode dispatch: commands 0-4 (11:00), and the F-group decoded by its second digit (11:17 -> pages 18/19/1a, or 12:00 for F0-F8).
