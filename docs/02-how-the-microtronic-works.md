@@ -515,12 +515,65 @@ carry these roles (time‑multiplexed where they overlap):
 | `K1`–`K4` | shared input bus: keypad rows, or DIN inputs, or SRAM read data |
 | `O0`–`O7` | 7‑segment pattern (via the OPLA); also the SRAM address nibble (via `TDO`) |
 
-### 7.4 What remains *(pending)*
+## 8. The F‑operations
 
-The remaining `F` operations — `DISP`, the shifts (`SHR`/`SHL`), carry ops
-(`ADC`/`SUBC`), and the `F0x` extended group (`HALT`, `NOP`, `HXDZ`, `RND`,
-`TIME`, `CLEAR`, `MULT`, `DIV`) — and the built‑in `PGM` programs are the last
-passes on the [roadmap](../README.md#roadmap-and-status).
+Opcode `F` is a whole family of operations, decoded in up to **three levels**:
+
+1. **2nd digit** (`11:17`): routes to the shift/carry/I/O ops (`9`–`F`) or, for
+   `0`–`8`, to page `12`.
+2. **On page `12`**: 2nd digit `1`–`6` → `DISP`; `7` → `MAS`; `8` → `INV`;
+   `0` → the `F0x` extended group on page `29`.
+3. **On page `29`** (and, for `F00`–`F05`, `1e:00`): the **3rd digit** selects
+   the specific extended operation.
+
+Putting all three levels together gives the complete `F`‑op → handler map:
+
+| Encoding | Mnemonic | Meaning | Handler |
+| --- | --- | --- | --- |
+| `F00` | `HALT` | stop the program | `1c:21` (the run‑check) |
+| `F01` | `NOP` | do nothing | `1e:32` |
+| `F02` | `DISOUT` | blank the display | `1e:34` |
+| `F03` | `HXDZ` | hex → decimal | `1d:00` |
+| `F04` | `DZHX` | decimal → hex | `1f:00` |
+| `F05` | `RND` | random → `Rd` | `1e:12` |
+| `F06` | `TIME` | read the clock | `12:18` |
+| `F07` | `RET` | return from `CALL` | ch1 pg5 |
+| `F08` | `CLEAR` | zero the registers | `2a:00` |
+| `F09` | `STC` | set carry | `2a:0a` |
+| `F0A` | `RSC` | reset carry | `2a:0e` |
+| `F0B` | `MULT` | multiply | `2b:00` |
+| `F0C` | `DIV` | divide | `2b:2b` |
+| `F1d`–`F6d` | `DISP` | show digits on the display | `13:00` |
+| `F7d` | `MAS` | display‑address set | `12:0a` |
+| `F8d` | `INV` | invert `Rd` | `1b:1f` |
+| `F9d` | `SHR` | shift `Rd` right | `1a:00` |
+| `FAd` | `SHL` | shift `Rd` left | `1a:29` |
+| `FBd` | `ADC` | `Rd += carry` | `19:0d` |
+| `FCd` | `SUBC` | `Rd -= carry` | `19:00` |
+| `FDd` | `DIN` | read inputs → `Rd` | `18:20` |
+| `FEd` | `DOT` | `Rd` → outputs | `18:10` |
+| `FFd` | `KIN` | read a key → `Rd` | `18:00` |
+
+A few of these are worth a note:
+
+- **`HALT` is not special.** It simply branches to the run‑check `1c:21`. Because
+  the run flag is not set on that path, the interpreter drops into keypad/idle
+  mode — the program stops "for free," with no dedicated stop machinery.
+- **`STC`/`RSC`** just set/clear bit 0 of the flags cell `M(4,13)`; `ADC`/`SUBC`
+  add/subtract that same carry bit through the ordinary ADD/SUB tails — this is
+  how multi‑digit arithmetic is built up from the 4‑bit ALU.
+- **`DISP`** copies the requested register digits into the six display cells that
+  the refresh loop (§6) scans; the OPLA then turns each into segments.
+- **`HXDZ`/`DZHX`** are the hex↔decimal converters. `HXDZ`'s overflow handling
+  was a genuine Microtronic quirk (later emulators, e.g. the Busch‑2090 Neo, ship
+  an explicit `HXDZ` overflow fix) — the ROM behaviour here is the authentic one.
+
+### 8.1 What remains *(pending)*
+
+The internal algorithms of the heavier `F0x` ops (`HXDZ`/`DZHX`, `MULT`, `DIV`,
+`RND`, `TIME`) and the built‑in `PGM` programs (self‑test, cassette `PGM 1`/`2`,
+clock, Nim) — up in chapters 2–3 — are the last items on the
+[roadmap](../README.md#roadmap-and-status).
 
 ## 4. Display, keypad, SRAM, and the F‑operations *(pending)*
 

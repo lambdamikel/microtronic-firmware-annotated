@@ -304,3 +304,39 @@
 18:28	Rd = A
 18:29	helper: set the ZERO flag from whether the value is nonzero
 18:3e	TDO output (F-op data path)
+
+# ===== Page 12: F0-F8 sub-dispatch (on the 2nd digit) + DISP/TIME =====
+12:00	F0..F8 dispatch on the 2nd digit: 0 = F0x extended, 1-6 = DISP, 7 = MAS, 8 = INV
+12:01	2nd digit == 8 -> INV (12:14)
+12:04	2nd digit == 7 -> MAS (12:0a)
+12:07	2nd digit 1..6 -> DISP (12:16 -> 13:00)
+12:08	2nd digit == 0 -> the F0x extended ops (1d:27)
+12:14	INV handler (F8d): invert Rd (-> 1b:1f)
+12:16	DISP (F1d..F6d): copy the requested register digits into the display buffer (13:00)
+12:18	TIME handler (F06): read the clock value
+
+# ===== Page 29: F0x extended-op dispatch (on the 3rd digit) =====
+29:04	F0x dispatch on the 3rd digit (the extended-op number 0..E)
+29:1f	3rd digit 0..5 -> further dispatch at 1e:00 (HALT/NOP/DISOUT/HXDZ/DZHX/RND)
+29:23	F06 TIME -> 12:18
+29:27	F07 RET -> restore the saved return address M(1,13):M(1,14)
+29:2b	F08 CLEAR -> 2a:00 (zero the registers)
+29:2d	F09 STC -> 2a:0a (set the CARRY flag)
+29:2f	F0A RSC -> 2a:0e (reset the CARRY flag)
+29:31	F0B MULT -> 2b:00 (multiply)
+29:33	F0C DIV -> 2b:2b (divide)
+
+# ===== Page 1e: F0x ops 0-5 dispatch + entry-mode reset =====
+1e:00	dispatch F0x ops 0..5 by the 3rd digit
+1e:10	F00 HALT -> 1c:21 (the run-check; with the run flag clear, the program stops)
+1e:12	F05 RND -> a random value into Rd
+1e:1a	reset to command-entry mode: clear the display / PC / state cells
+1e:32	F01 NOP (do nothing; on to the next instruction)
+1e:34	F02 DISOUT (blank the display)
+1e:3a	F04 DZHX -> 1f:00 (decimal-to-hex conversion)
+1e:3c	F03 HXDZ -> 1d:00 (hex-to-decimal conversion)
+
+# ===== Page 19: ADC / SUBC (carry-propagation ops) =====
+19:00	SUBC handler (FCd): Rd = Rd - carry (subtract the borrow; for multi-digit subtraction)
+19:0d	ADC handler (FBd): Rd = Rd + carry (add the carry; for multi-digit addition)
+19:11	test the CARRY flag, then add 0 or 1 to Rd via the ADD tail (17:0c)

@@ -1259,15 +1259,16 @@
 # -----------------------------------------------------------------------------
 # Page 12
 
-    TMA             # 12:00 (12:00) 21  -  
-    ACxAC  7        # 12:01 (12:01) 7e  -  
+    # === F0-F8 SUB-DISPATCH (on the 2nd digit): 0 = the F0x extended ops (-> 1d:27 -> page 29), 1-6 = DISP, 7 = MAS, 8 = INV. ===
+    TMA             # 12:00 (12:00) 21  -  F0..F8 dispatch on the 2nd digit: 0 = F0x extended, 1-6 = DISP, 7 = MAS, 8 = INV
+    ACxAC  7        # 12:01 (12:01) 7e  -  2nd digit == 8 -> INV (12:14)
     BR     14       # 12:02 (12:03) b5  -  
     TMA             # 12:03 (12:07) 21  -  
-    ACxAC  8        # 12:04 (12:0f) 71  -  
+    ACxAC  8        # 12:04 (12:0f) 71  -  2nd digit == 7 -> MAS (12:0a)
     BR     0a       # 12:05 (12:1f) b7  -  
     MNEZ            # 12:06 (12:3f) 3f  -  
-    BR     16       # 12:07 (12:3e) 96  -  
-    LDP    d        # 12:08 (12:3d) 1b  -  
+    BR     16       # 12:07 (12:3e) 96  -  2nd digit 1..6 -> DISP (12:16 -> 13:00)
+    LDP    d        # 12:08 (12:3d) 1b  -  2nd digit == 0 -> the F0x extended ops (1d:27)
     BR     27       # 12:09 (12:3b) b6  -  
     LDX    1        # 12:0a (12:37) 2c  -  
     TCY    0        # 12:0b (12:2f) 40  -  
@@ -1279,11 +1280,11 @@
     LDX    7        # 12:11 (12:0e) 2f  -  
     LDP    8        # 12:12 (12:1d) 11  -  
     BR     38       # 12:13 (12:3a) a5  -  
-    LDP    b        # 12:14 (12:35) 1d  -  
+    LDP    b        # 12:14 (12:35) 1d  -  INV handler (F8d): invert Rd (-> 1b:1f)
     BR     1f       # 12:15 (12:2b) ae  -  
-    LDP    3        # 12:16 (12:16) 1c  -  
+    LDP    3        # 12:16 (12:16) 1c  -  DISP (F1d..F6d): copy the requested register digits into the display buffer (13:00)
     BR     00       # 12:17 (12:2c) 80  -  
-    TCY    0        # 12:18 (12:18) 40  -  
+    TCY    0        # 12:18 (12:18) 40  -  TIME handler (F06): read the clock value
     LDX    4        # 12:19 (12:30) 29  -  
     TMA             # 12:1a (12:21) 21  -  
     LDX    7        # 12:1b (12:02) 2f  -  
@@ -1747,7 +1748,8 @@
 # -----------------------------------------------------------------------------
 # Page 19
 
-    LDP    6        # 19:00 (19:00) 16  -  
+    # === ADC (FBd) and SUBC (FCd): add / subtract the CARRY flag to/from Rd, for multi-digit arithmetic. Reuse the ADD/SUB compute tails. ===
+    LDP    6        # 19:00 (19:00) 16  -  SUBC handler (FCd): Rd = Rd - carry (subtract the borrow; for multi-digit subtraction)
     CALL   1b       # 19:01 (19:01) c2  -  
     TCY    d        # 19:02 (19:03) 4b  -  
     TBIT   0        # 19:03 (19:07) 38  -  
@@ -1760,11 +1762,11 @@
     ACxAC  0        # 19:0a (19:37) 70  -  
     TCY    f        # 19:0b (19:2f) 4f  -  
     BR     07       # 19:0c (19:1e) be  -  
-    LDP    a        # 19:0d (19:3c) 15  -  
+    LDP    a        # 19:0d (19:3c) 15  -  ADC handler (FBd): Rd = Rd + carry (add the carry; for multi-digit addition)
     CALL   00       # 19:0e (19:39) c0  -  
     LDX    4        # 19:0f (19:33) 29  -  
     TAM             # 19:10 (19:27) 27  -  
-    TCY    d        # 19:11 (19:0e) 4b  -  
+    TCY    d        # 19:11 (19:0e) 4b  -  test the CARRY flag, then add 0 or 1 to Rd via the ADD tail (17:0c)
     TBIT   0        # 19:12 (19:1d) 38  -  
     BR     18       # 19:13 (19:3a) 98  -  
     CLA             # 19:14 (19:35) 7f  -  
@@ -2096,7 +2098,7 @@
 # -----------------------------------------------------------------------------
 # Page 1e
 
-    TMA             # 1e:00 (1e:00) 21  -  
+    TMA             # 1e:00 (1e:00) 21  -  dispatch F0x ops 0..5 by the 3rd digit
     ACxAC  a        # 1e:01 (1e:01) 75  -  
     BR     12       # 1e:02 (1e:03) 9d  -  
     TMA             # 1e:03 (1e:07) 21  -  
@@ -2112,9 +2114,9 @@
     ACxAC  0        # 1e:0d (1e:3c) 70  -  
     ACxAC  d        # 1e:0e (1e:39) 7b  -  
     BR     32       # 1e:0f (1e:33) 89  -  
-    LDP    c        # 1e:10 (1e:27) 13  -  
+    LDP    c        # 1e:10 (1e:27) 13  -  F00 HALT -> 1c:21 (the run-check; with the run flag clear, the program stops)
     BR     21       # 1e:11 (1e:0e) b8  -  
-    TCY    d        # 1e:12 (1e:1d) 4b  -  
+    TCY    d        # 1e:12 (1e:1d) 4b  -  F05 RND -> a random value into Rd
     LDX    5        # 1e:13 (1e:3a) 2d  -  
     TMA             # 1e:14 (1e:35) 21  -  
     LDX    7        # 1e:15 (1e:2b) 2f  -  
@@ -2122,7 +2124,7 @@
     IYC             # 1e:17 (1e:2c) 05  -  
     BR     32       # 1e:18 (1e:18) 89  -  
     BR     13       # 1e:19 (1e:30) ba  -  
-    LDX    0        # 1e:1a (1e:21) 28  -  
+    LDX    0        # 1e:1a (1e:21) 28  -  reset to command-entry mode: clear the display / PC / state cells
     TCY    8        # 1e:1b (1e:02) 41  -  
     TCMIY  2        # 1e:1c (1e:05) 64  -  
     TCMIY  0        # 1e:1d (1e:0b) 60  -  
@@ -2146,17 +2148,17 @@
     RETN            # 1e:2f (1e:11) 0f  -  
     LDP    2        # 1e:30 (1e:22) 14  -  
     CALL   35       # 1e:31 (1e:04) cc  -  
-    LDP    8        # 1e:32 (1e:09) 11  -  
+    LDP    8        # 1e:32 (1e:09) 11  -  F01 NOP (do nothing; on to the next instruction)
     BR     36       # 1e:33 (1e:13) 99  -  
-    LDX    3        # 1e:34 (1e:26) 2e  -  
+    LDX    3        # 1e:34 (1e:26) 2e  -  F02 DISOUT (blank the display)
     TCY    6        # 1e:35 (1e:0c) 46  -  
     TCMIY  0        # 1e:36 (1e:19) 60  -  
     TCMIY  0        # 1e:37 (1e:32) 60  -  
     TCMIY  0        # 1e:38 (1e:25) 60  -  
     BR     32       # 1e:39 (1e:0a) 89  -  
-    LDP    f        # 1e:3a (1e:15) 1f  -  
+    LDP    f        # 1e:3a (1e:15) 1f  -  F04 DZHX -> 1f:00 (decimal-to-hex conversion)
     BR     00       # 1e:3b (1e:2a) 80  -  
-    LDP    d        # 1e:3c (1e:14) 1b  -  
+    LDP    d        # 1e:3c (1e:14) 1b  -  F03 HXDZ -> 1d:00 (hex-to-decimal conversion)
     BR     00       # 1e:3d (1e:28) 80  -  
     MNEA            # 1e:3e (1e:10) 00  -  
     MNEA            # 1e:3f (1e:20) 00  -  
@@ -2859,7 +2861,8 @@
     TPC            # 29:01 (29:01) 0b  -  
     LDP    0        # 29:02 (29:03) 10  -  
     BR     36       # 29:03 (29:07) 99  -  
-    TMA             # 29:04 (29:0f) 21  -  
+    # === F0x EXTENDED-OP DISPATCH (on the 3rd digit). HALT/NOP/DISOUT/HXDZ/DZHX/RND go via 1e:00; TIME/RET/CLEAR/STC/RSC/MULT/DIV are dispatched here to their handlers. ===
+    TMA             # 29:04 (29:0f) 21  -  F0x dispatch on the 3rd digit (the extended-op number 0..E)
     ACxAC  1        # 29:05 (29:1f) 78  -  
     BR     37       # 29:06 (29:3f) b2  -  
     TMA             # 29:07 (29:3e) 21  -  
@@ -2886,27 +2889,27 @@
     TMA             # 29:1c (29:05) 21  -  
     ACxAC  9        # 29:1d (29:0b) 79  -  
     BR     23       # 29:1e (29:17) a3  -  
-    LDP    1        # 29:1f (29:2e) 18  -  
+    LDP    1        # 29:1f (29:2e) 18  -  3rd digit 0..5 -> further dispatch at 1e:00 (HALT/NOP/DISOUT/HXDZ/DZHX/RND)
     TPC            # 29:20 (29:1c) 0b  -  
     LDP    e        # 29:21 (29:38) 17  -  
     BR     00       # 29:22 (29:31) 80  -  
-    LDP    1        # 29:23 (29:23) 18  -  
+    LDP    1        # 29:23 (29:23) 18  -  F06 TIME -> 12:18
     TPC            # 29:24 (29:06) 0b  -  
     LDP    2        # 29:25 (29:0d) 14  -  
     BR     18       # 29:26 (29:1b) 98  -  
-    LDP    1        # 29:27 (29:36) 18  -  
+    LDP    1        # 29:27 (29:36) 18  -  F07 RET -> restore the saved return address M(1,13):M(1,14)
     TPC            # 29:28 (29:2d) 0b  -  
     LDP    5        # 29:29 (29:1a) 1a  -  
     BR     00       # 29:2a (29:34) 80  -  
-    LDP    a        # 29:2b (29:29) 15  -  
+    LDP    a        # 29:2b (29:29) 15  -  F08 CLEAR -> 2a:00 (zero the registers)
     BR     00       # 29:2c (29:12) 80  -  
-    LDP    a        # 29:2d (29:24) 15  -  
+    LDP    a        # 29:2d (29:24) 15  -  F09 STC -> 2a:0a (set the CARRY flag)
     BR     0a       # 29:2e (29:08) b7  -  
-    LDP    a        # 29:2f (29:11) 15  -  
+    LDP    a        # 29:2f (29:11) 15  -  F0A RSC -> 2a:0e (reset the CARRY flag)
     BR     0e       # 29:30 (29:22) b9  -  
-    LDP    b        # 29:31 (29:04) 1d  -  
+    LDP    b        # 29:31 (29:04) 1d  -  F0B MULT -> 2b:00 (multiply)
     BR     00       # 29:32 (29:09) 80  -  
-    LDP    b        # 29:33 (29:13) 1d  -  
+    LDP    b        # 29:33 (29:13) 1d  -  F0C DIV -> 2b:2b (divide)
     BR     2b       # 29:34 (29:26) a9  -  
     LDP    a        # 29:35 (29:0c) 15  -  
     BR     12       # 29:36 (29:19) 9d  -  
