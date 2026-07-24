@@ -4034,8 +4034,9 @@
 # -----------------------------------------------------------------------------
 # Page 3a
 
-    TCY    4        # 3a:00 (3a:00) 42  -  
-    IMAC            # 3a:01 (3a:01) 3e  -  
+    # === EMBEDDED MICROTRONIC PROGRAMS. The built-in demo/self-test program(s) are stored here as Microtronic CODE: each instruction is three TCMIY constants (its three hex digits), and a CALL to the loader at 3a:00 writes it into external SRAM. The interpreter then runs it exactly like a typed-in or cassette-loaded program. ~69 instructions across 3a-3f (identified by Decle/Jason as the Nim game). ===
+    TCY    4        # 3a:00 (3a:00) 42  -  program loader: write the just-built 3-nibble instruction to the next SRAM slot and advance the address
+    IMAC            # 3a:01 (3a:01) 3e  -  bump the SRAM write pointer (increment; carry into the high nibble)
     BR     05       # 3a:02 (3a:03) 9f  -  
     TAM             # 3a:03 (3a:07) 27  -  
     BR     08       # 3a:04 (3a:0f) bd  -  
@@ -4044,7 +4045,7 @@
     TAM             # 3a:07 (3a:3e) 27  -  
     LDP    f        # 3a:08 (3a:3d) 1f  -  
     BR     1c       # 3a:09 (3a:3b) 85  -  
-    TCMIY  0        # 3a:0a (3a:37) 60  -  
+    TCMIY  0        # 3a:0a (3a:37) 60  -  embedded program begins: each TCMIY triple = one Microtronic instruction (its 3 hex digits); CALL 00 stores it to SRAM
     TCMIY  e        # 3a:0b (3a:2f) 67  -  
     TCMIY  f        # 3a:0c (3a:1e) 6f  -  
     CALL   00       # 3a:0d (3a:3c) c0  -  
@@ -4103,7 +4104,7 @@
 # -----------------------------------------------------------------------------
 # Page 3b
 
-    TCMIY  f        # 3b:00 (3b:00) 6f  -  
+    TCMIY  f        # 3b:00 (3b:00) 6f  -  embedded Microtronic program (continued): three TCMIY constants per instruction, each followed by a CALL to the loader (3a:00)
     TCMIY  3        # 3b:01 (3b:01) 6c  -  
     TCMIY  b        # 3b:02 (3b:03) 6d  -  
     LDP    a        # 3b:03 (3b:07) 15  -  

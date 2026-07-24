@@ -51,3 +51,5 @@
 1f:00	R13:R14:R15 staging helper (used by HXDZ and DZHX), and DZHX (F04): decimal -> hex by counting the decimal value down while counting the hex result up.
 # ---- Page 2b: MULT / DIV ----
 2b:00	MULT (F0B) and DIV (F0C): 6-digit (4-digit for DIV) decimal multiply/divide by repeated addition/subtraction. The second operand lives in the extended register bank (file 6); MULT clears it afterwards.
+# ---- Chapter 3 (pages 3a-3f): embedded Microtronic programs ----
+3a:00	EMBEDDED MICROTRONIC PROGRAMS. The built-in demo/self-test program(s) are stored here as Microtronic CODE: each instruction is three TCMIY constants (its three hex digits), and a CALL to the loader at 3a:00 writes it into external SRAM. The interpreter then runs it exactly like a typed-in or cassette-loaded program. ~69 instructions across 3a-3f (identified by Decle/Jason as the Nim game).

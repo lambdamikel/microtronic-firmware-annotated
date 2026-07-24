@@ -364,3 +364,9 @@
 2b:19	inner loop: add / copy a multi-digit operand digit by digit
 2b:2b	DIV (F0C): divide the extended-register operand by R0..R3 (repeated subtraction -> quotient + remainder)
 2b:34	read a digit input (R6-gated K read) used while forming the result
+
+# ===== Chapter 3: embedded Microtronic programs (loaded into SRAM) =====
+3a:00	program loader: write the just-built 3-nibble instruction to the next SRAM slot and advance the address
+3a:01	bump the SRAM write pointer (increment; carry into the high nibble)
+3a:0a	embedded program begins: each TCMIY triple = one Microtronic instruction (its 3 hex digits); CALL 00 stores it to SRAM
+3b:00	embedded Microtronic program (continued): three TCMIY constants per instruction, each followed by a CALL to the loader (3a:00)

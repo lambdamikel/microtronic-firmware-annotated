@@ -11,8 +11,9 @@ Almost nothing the user sees maps one‑to‑one to hardware. The user's "regist
 are RAM cells; the user's "opcodes" are decoded by a software dispatch; the
 "display" is produced by the firmware strobing digits thousands of times a
 second. This document builds that picture routine by routine, from power‑on
-outward. It grows as the annotation progresses; sections marked *(pending)* are
-next on the [roadmap](../README.md#roadmap-and-status).
+outward — boot, the interpreter loop, every opcode and `F`‑operation, the
+display, the keypad, the SRAM, and the built‑in programs — ending with a
+[summary of the whole machine](#10-summary-the-whole-machine).
 
 > **Conventions.** `M(x,y)` is the RAM cell in file `x`, word `y` (both from the
 > host's point of view). `page:offset` addresses (e.g. `00:1f`) are the *logical*
@@ -622,11 +623,71 @@ multiply, divide, random — is counting loops over register groups. It is slow
 (`HXDZ` of a large value is hundreds of iterations) but it is all a 4‑bit chip
 with no multiplier needs.
 
-### 8.2 What remains *(pending)*
+## 9. The built‑in PGM programs
 
-Only the built‑in `PGM` programs (self‑test `PGM 0`, cassette `PGM 1`/`2`, clock,
-and the Nim game) up in chapters 2–3 remain — the last item on the
-[roadmap](../README.md#roadmap-and-status).
+Pressing `PGM` and a digit in halted mode runs one of the firmware's built‑in
+programs. There are two kinds, and the difference is the nicest structural point
+in the whole ROM.
+
+### 9.1 Native programs: self‑test and cassette
+
+`PGM 0` (the hardware self‑test) and `PGM 1`/`PGM 2` (the 2095 cassette
+save/load) are **native TMS1600 routines** — they poke the hardware directly.
+The self‑test exercises the display, keypad, and I/O lines against a test
+harness; the cassette routines bit‑bang the 2095 interface (the tape format is
+FSK, built on the Microtronic's 32.768 kHz clock — which is also why a real 2095
+can't talk to an emulator that doesn't generate that clock). These are firmware,
+not Microtronic code.
+
+### 9.2 Demo programs are Microtronic programs baked into ROM
+
+The demo (identified by the team as a **Nim** game) is not native code at all —
+it is a **Microtronic program stored inside the TMS ROM as data**, in chapter 3
+(pages `3a`–`3f`). Each Microtronic instruction is encoded as **three `TCMIY`
+constants** (its three hex digits), followed by a `CALL` to the loader at
+`3a:00`:
+
+```
+3b:00  TCMIY f      \
+3b:01  TCMIY 3       >  one Microtronic instruction (its three digits)
+3b:02  TCMIY b      /
+3b:03  LDP a / CALL 00   ; loader: write it to the next SRAM slot, advance the address
+       ... repeat, ~69 instructions across pages 3a-3f ...
+```
+
+The loader (`3a:00`) writes each assembled instruction into the external SRAM
+through the very same write path as keypad entry (§5.3), advancing the address
+each time. When it finishes, the program simply **runs from SRAM under the normal
+interpreter** — fetch, decode, dispatch, execute — indistinguishable from a
+program the user typed in or loaded from tape.
+
+This closes the loop of the whole design: the firmware's own applications are
+written in the very 4‑bit instruction set that the rest of the firmware exists to
+implement. The interpreter doesn't know or care whether the bytes in SRAM came
+from the keypad, the cassette, or a table in its own ROM.
+
+## 10. Summary: the whole machine
+
+Reading from the silicon up, the Busch Microtronic is:
+
+1. a **TMS1600** — a 4‑bit mask‑ROM microcontroller with an LFSR program counter,
+   128 nibbles of RAM, and a handful of I/O lines (doc 01);
+2. running a **~4 KB firmware** that lays out, in that RAM, a complete virtual
+   machine — 16 user registers (file 7), a program counter (file 2), carry/zero
+   flags (`M(4,13)`), and a three‑nibble instruction buffer (file 1);
+3. which **fetches** three‑nibble instructions from external SRAM, **decodes** the
+   command digit through a two‑level jump table, and **executes** one of 16
+   opcodes plus a family of `F` operations — building multi‑digit arithmetic,
+   hex/decimal conversion, and even multiply/divide out of nothing but 4‑bit
+   counting loops;
+4. **multiplexing** a six‑digit display (segments via the OPLA) and **scanning** a
+   key matrix, both time‑sharing the same `R`/`K` lines as the SRAM;
+5. and shipping **its own demo program** written in that instruction set, baked
+   into the ROM as data.
+
+Every one of those layers is now annotated in [`../annotated/`](../annotated/)
+and traced above. What began as 4,096 scrambled bytes is a legible little
+computer.
 
 ## 4. Display, keypad, SRAM, and the F‑operations *(pending)*
 

@@ -17,10 +17,12 @@ and turns it into something a human can read: a fully **annotated disassembly**
 plus a set of documents that explain, from the silicon up, **how the Microtronic
 actually works**.
 
-> **Status:** work in progress. The raw materials (ROM image + disassembly) are
-> complete and authoritative; the annotations and the "theory of operation"
-> documents are being written routine by routine. See
-> [Roadmap](#roadmap-and-status) below.
+> **Status:** the **"theory of operation" is complete** — [`docs/02`](docs/02-how-the-microtronic-works.md)
+> now traces the whole machine end to end (boot → fetch/decode/dispatch → every
+> opcode and `F`‑operation → display, keypad, SRAM → the built‑in programs), and
+> [`docs/01`](docs/01-tms1600-architecture.md) covers the host CPU. The inline
+> comment column of the [annotated listing](annotated/) is filled in for the core
+> routines of every subsystem and continues to grow. See [Roadmap](#roadmap-and-status).
 
 ---
 
@@ -105,7 +107,7 @@ the LFSR ordering means and why the two addresses differ.
 - [x] Annotate: external 2114 SRAM read — the instruction fetch (`09:02`), addressing, and the `KL`/`L` data path (writes share the same machinery; covered with keypad/`PGM` entry)
 - [x] Annotate: arithmetic/logic opcodes, the flags (`M(4,13)`), and control flow (`GOTO`/`CALL`/`BRC`/`BRZ`)
 - [x] Annotate: the `F` operations — the full three‑level dispatch and complete `F`‑op → handler map, **plus** deep‑dives on the heavy ops (`HXDZ`/`DZHX` count‑conversion, `RND`, `MULT`/`DIV` via the extended register bank)
-- [ ] Annotate: the built‑in `PGM` firmware programs (self‑test, cassette, clock, demos)
+- [x] Annotate: the built‑in `PGM` programs — native self‑test/cassette vs. the demo (Nim) stored in ROM as embedded Microtronic code and loaded to SRAM
 
 ## Provenance, credit, and permissions
 
