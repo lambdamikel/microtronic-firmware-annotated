@@ -689,6 +689,10 @@ Every one of those layers is now annotated in [`../annotated/`](../annotated/)
 and traced above. What began as 4,096 scrambled bytes is a legible little
 computer.
 
+For a step back from the machine itself — what it means that this reconstruction
+was done by a frontier model in an afternoon — see
+[doc 03, *Reflections*](03-reflections.md).
+
 ## 4. Display, keypad, SRAM, and the F‑operations *(pending)*
 
 *Also on the roadmap:* the 7‑segment multiplexing and flag LEDs; the hex keypad

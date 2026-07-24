@@ -68,10 +68,15 @@ re‑derivable from the untouched source.
   and pages, the **LFSR program counter**, the RAM file, the K/R/O I/O lines,
   and the full instruction set (with exact semantics taken from Jason's
   emulator).
-- `docs/02-how-the-microtronic-works.md` *(in progress)* — the guest machine:
+- [`docs/02-how-the-microtronic-works.md`](docs/02-how-the-microtronic-works.md) — the guest machine:
   the RAM memory map, the fetch/decode/dispatch of the 16 Microtronic opcodes,
   display multiplexing, keyboard scanning, external 2114 SRAM access, and how
-  each built‑in `F` operation and `PGM` program is implemented.
+  each built‑in `F` operation and `PGM` program is implemented. A complete
+  §1–§10 theory of operation.
+- [`docs/03-reflections.md`](docs/03-reflections.md) — a short essay: what it
+  means that a frontier model reverse‑engineered this firmware in an afternoon —
+  the human feat of the ROM dump, why traditional tools struggle with the
+  TMS1000 family, and the dual‑use implications for firmware security.
 
 ## How to read the annotated disassembly
 
