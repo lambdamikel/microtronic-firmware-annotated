@@ -33,6 +33,9 @@ be pinned down as their routines are traced.
 registers `R0`…`R15`. An opcode that names a register indexes file 7 by the
 operand nibble. (Confirmed: `MOV`/`MOVI` read and write exactly these cells.)
 
+**File 6 — the extended register bank.** A second, shadow set of 16 registers
+used only as the second operand of `MULT`/`DIV` (§8.1).
+
 **File 1 — the interpreter's control block:**
 
 | Cell | Role |
@@ -568,11 +571,61 @@ A few of these are worth a note:
   was a genuine Microtronic quirk (later emulators, e.g. the Busch‑2090 Neo, ship
   an explicit `HXDZ` overflow fix) — the ROM behaviour here is the authentic one.
 
-### 8.1 What remains *(pending)*
+### 8.1 The heavy F0x operations, in detail
 
-The internal algorithms of the heavier `F0x` ops (`HXDZ`/`DZHX`, `MULT`, `DIV`,
-`RND`, `TIME`) and the built‑in `PGM` programs (self‑test, cassette `PGM 1`/`2`,
-clock, Nim) — up in chapters 2–3 — are the last items on the
+`HXDZ`, `DZHX`, `RND`, `MULT`, and `DIV` are the operations that treat *groups of
+registers* as multi‑digit numbers. None of them can lean on a hardware multiply
+or divide — the TMS1600 has neither — so the ROM builds them all out of
+**counting loops**. The register conventions below match the documented behaviour
+(and are confirmed by the staging code in the ROM).
+
+**`HXDZ` (F03) — hex → decimal, on `R13:R14:R15`.** The three registers are read
+as a hex value `R13 + 16·R14 + 256·R15` (little‑endian). The ROM (`1d:00`) stages
+them into a work area, then runs the only conversion a divide‑less machine can:
+
+```
+decimal = 000                 ; three BCD digits
+while hex != 0:
+    hex     = hex - 1         ; count the hex value down (binary)
+    decimal = decimal + 1     ; count the result up (BCD, carry when a digit hits 10)
+```
+
+The result (3 BCD digits) is written back to `R13:R14:R15`. If the value exceeds
+**999** it can't fit in three decimal digits — the ROM detects the carry past the
+third digit, **zeroes the result and sets the ZERO flag**. This overflow handling
+is the exact behaviour whose reproduction later emulators had to get right.
+
+**`DZHX` (F04) — decimal → hex, on `R13:R14:R15`.** The mirror image (`1f:00`
+onward): read `R13 + 10·R14 + 100·R15`, then count the *decimal* value down (a
+digit that goes below 0 becomes 9 with a borrow) while counting the *hex* result
+up. Result back to `R13:R14:R15`.
+
+**`RND` (F05) — three random nibbles into `R13:R14:R15`.** Not one register —
+three. The handler (`1e:12`) copies three nibbles out of a continuously‑updated
+counter area (file 5) into `R13`, `R14`, `R15`. Because that counter is spinning
+throughout the display/keypad idle loop, its value at the instant `RND` runs
+depends on human timing — cheap but effective pseudo‑randomness with no RNG
+hardware.
+
+**`MULT` (F0B) / `DIV` (F0C) — multi‑digit decimal, using a second register
+bank.** `MULT` reads a 6‑digit decimal number from `R0`–`R5` and multiplies it by
+a second 6‑digit operand held in the **extended register bank** — a *separate RAM
+file* (file 6) that shadows the normal registers. It forms the product by
+repeated decimal addition (`2b:00`), writes the 6 result digits back to `R0`–`R5`,
+sets `CARRY` on overflow (`> 999999`) or on any non‑decimal input digit, and
+clears the extended bank. `DIV` (`2b:2b`) is the same idea with repeated
+subtraction, producing a quotient and remainder from `R0`–`R3` and the extended
+operand.
+
+So the entire "advanced maths" of the Microtronic — decimal conversion,
+multiply, divide, random — is counting loops over register groups. It is slow
+(`HXDZ` of a large value is hundreds of iterations) but it is all a 4‑bit chip
+with no multiplier needs.
+
+### 8.2 What remains *(pending)*
+
+Only the built‑in `PGM` programs (self‑test `PGM 0`, cassette `PGM 1`/`2`, clock,
+and the Nim game) up in chapters 2–3 remain — the last item on the
 [roadmap](../README.md#roadmap-and-status).
 
 ## 4. Display, keypad, SRAM, and the F‑operations *(pending)*

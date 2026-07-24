@@ -45,3 +45,9 @@
 29:04	F0x EXTENDED-OP DISPATCH (on the 3rd digit). HALT/NOP/DISOUT/HXDZ/DZHX/RND go via 1e:00; TIME/RET/CLEAR/STC/RSC/MULT/DIV are dispatched here to their handlers.
 # ---- Page 19: carry-propagation ops ----
 19:00	ADC (FBd) and SUBC (FCd): add / subtract the CARRY flag to/from Rd, for multi-digit arithmetic. Reuse the ADD/SUB compute tails.
+# ---- Page 1d: HXDZ (hex->decimal conversion) ----
+1d:00	HXDZ (F03): hex -> decimal on R13:R14:R15, by counting the hex value down to 0 while counting the BCD result up (no hardware divide). Overflow (value > 999) zeroes the result and sets ZERO. The classic Microtronic conversion whose overflow behaviour was later a documented quirk.
+# ---- Page 1f: DZHX (decimal->hex) + the shared staging helper ----
+1f:00	R13:R14:R15 staging helper (used by HXDZ and DZHX), and DZHX (F04): decimal -> hex by counting the decimal value down while counting the hex result up.
+# ---- Page 2b: MULT / DIV ----
+2b:00	MULT (F0B) and DIV (F0C): 6-digit (4-digit for DIV) decimal multiply/divide by repeated addition/subtraction. The second operand lives in the extended register bank (file 6); MULT clears it afterwards.

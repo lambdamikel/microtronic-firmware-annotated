@@ -104,7 +104,7 @@ the LFSR ordering means and why the two addresses differ.
 - [x] Annotate: the hex keypad matrix scan (`01`) and the I/O opcodes `KIN`/`DOT`/`DIN` (`18`); the shared‑`K`‑bus model and full I/O line map
 - [x] Annotate: external 2114 SRAM read — the instruction fetch (`09:02`), addressing, and the `KL`/`L` data path (writes share the same machinery; covered with keypad/`PGM` entry)
 - [x] Annotate: arithmetic/logic opcodes, the flags (`M(4,13)`), and control flow (`GOTO`/`CALL`/`BRC`/`BRZ`)
-- [x] Annotate: the `F` operations — the full three‑level dispatch and complete `F`‑op → handler map (`HALT`, `DISP`, `SHR`/`SHL`, `ADC`/`SUBC`, `HXDZ`, `RND`, `TIME`, `CLEAR`, `MULT`, `DIV`, …); a few heavy‑op internals remain optional deep‑dives
+- [x] Annotate: the `F` operations — the full three‑level dispatch and complete `F`‑op → handler map, **plus** deep‑dives on the heavy ops (`HXDZ`/`DZHX` count‑conversion, `RND`, `MULT`/`DIV` via the extended register bank)
 - [ ] Annotate: the built‑in `PGM` firmware programs (self‑test, cassette, clock, demos)
 
 ## Provenance, credit, and permissions

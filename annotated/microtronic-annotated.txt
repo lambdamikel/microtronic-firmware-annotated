@@ -2029,30 +2029,31 @@
 # -----------------------------------------------------------------------------
 # Page 1d
 
-    LDP    f        # 1d:00 (1d:00) 1f  -  
-    CALL   00       # 1d:01 (1d:01) c0  -  
-    TCY    d        # 1d:02 (1d:03) 4b  -  
+    # === HXDZ (F03): hex -> decimal on R13:R14:R15, by counting the hex value down to 0 while counting the BCD result up (no hardware divide). Overflow (value > 999) zeroes the result and sets ZERO. The classic Microtronic conversion whose overflow behaviour was later a documented quirk. ===
+    LDP    f        # 1d:00 (1d:00) 1f  -  HXDZ (F03): convert the hex value R13 + 16*R14 + 256*R15 to 3 decimal digits in R13:R14:R15
+    CALL   00       # 1d:01 (1d:01) c0  -  stage R13:R14:R15 into the file-5 work area and clear the result (calls 1f:00)
+    TCY    d        # 1d:02 (1d:03) 4b  -  is the (hex) value still nonzero?
     MNEZ            # 1d:03 (1d:07) 3f  -  
     BR     08       # 1d:04 (1d:0f) bd  -  
     IYC             # 1d:05 (1d:1f) 05  -  
     BR     1a       # 1d:06 (1d:3f) a1  -  
     BR     03       # 1d:07 (1d:3e) 87  -  
-    TCY    d        # 1d:08 (1d:3d) 4b  -  
+    TCY    d        # 1d:08 (1d:3d) 4b  -  count the hex value DOWN by one ...
     DMAN            # 1d:09 (1d:3b) 07  -  
     BR     0e       # 1d:0a (1d:37) b9  -  
     TAMIYC          # 1d:0b (1d:2f) 25  -  
     BR     1a       # 1d:0c (1d:1e) a1  -  
     BR     09       # 1d:0d (1d:3c) bb  -  
     TAM             # 1d:0e (1d:39) 27  -  
-    TCY    0        # 1d:0f (1d:33) 40  -  
+    TCY    0        # 1d:0f (1d:33) 40  -  ... and count the decimal result UP by one (per-digit BCD)
     IMAC            # 1d:10 (1d:27) 3e  -  
     TAM             # 1d:11 (1d:0e) 27  -  
-    ACxAC  5        # 1d:12 (1d:1d) 7a  -  
+    ACxAC  5        # 1d:12 (1d:1d) 7a  -  digit reached 10 -> carry: set it to 0 and bump the next decimal digit
     BR     15       # 1d:13 (1d:3a) ab  -  
     BR     08       # 1d:14 (1d:35) bd  -  
     CLA             # 1d:15 (1d:2b) 7f  -  
     TAMIYC          # 1d:16 (1d:16) 25  -  
-    YNEC   3        # 1d:17 (1d:2c) 5c  -  
+    YNEC   3        # 1d:17 (1d:2c) 5c  -  carried past the 3rd digit (value > 999) = overflow -> zero the result, set the ZERO flag
     BR     10       # 1d:18 (1d:18) a7  -  
     BR     1c       # 1d:19 (1d:30) 85  -  
     LDP    f        # 1d:1a (1d:21) 1f  -  
@@ -2116,7 +2117,7 @@
     BR     32       # 1e:0f (1e:33) 89  -  
     LDP    c        # 1e:10 (1e:27) 13  -  F00 HALT -> 1c:21 (the run-check; with the run flag clear, the program stops)
     BR     21       # 1e:11 (1e:0e) b8  -  
-    TCY    d        # 1e:12 (1e:1d) 4b  -  F05 RND -> a random value into Rd
+    TCY    d        # 1e:12 (1e:1d) 4b  -  RND (F05): fill R13, R14, R15 with pseudo-random nibbles, copied from a continuously-updated counter area (file 5) - so the result depends on timing
     LDX    5        # 1e:13 (1e:3a) 2d  -  
     TMA             # 1e:14 (1e:35) 21  -  
     LDX    7        # 1e:15 (1e:2b) 2f  -  
@@ -2167,8 +2168,9 @@
 # -----------------------------------------------------------------------------
 # Page 1f
 
-    TCY    d        # 1f:00 (1f:00) 4b  -  
-    LDX    7        # 1f:01 (1f:01) 2f  -  
+    # === R13:R14:R15 staging helper (used by HXDZ and DZHX), and DZHX (F04): decimal -> hex by counting the decimal value down while counting the hex result up. ===
+    TCY    d        # 1f:00 (1f:00) 4b  -  stage R13:R14:R15 into the file-5 work area; clear the destination (shared by HXDZ and DZHX)
+    LDX    7        # 1f:01 (1f:01) 2f  -  copy R13, R14, R15 (the value) into file 5
     TMA             # 1f:02 (1f:03) 21  -  
     LDX    5        # 1f:03 (1f:07) 2d  -  
     TAM             # 1f:04 (1f:0f) 27  -  
@@ -2181,21 +2183,21 @@
     LDP    0        # 1f:0b (1f:2f) 10  -  
     CALL   07       # 1f:0c (1f:1e) fe  -  
     RETN            # 1f:0d (1f:3c) 0f  -  
-    TCY    d        # 1f:0e (1f:39) 4b  -  
+    TCY    d        # 1f:0e (1f:39) 4b  -  DZHX loop: while the decimal value is nonzero ...
     MNEZ            # 1f:0f (1f:33) 3f  -  
     BR     14       # 1f:10 (1f:27) b5  -  
     IYC             # 1f:11 (1f:0e) 05  -  
     BR     24       # 1f:12 (1f:1d) 86  -  
     BR     0f       # 1f:13 (1f:3a) b3  -  
-    TCY    d        # 1f:14 (1f:35) 4b  -  
+    TCY    d        # 1f:14 (1f:35) 4b  -  count the decimal value DOWN by one (BCD) ...
     DMAN            # 1f:15 (1f:2b) 07  -  
     BR     1b       # 1f:16 (1f:16) 82  -  
-    TCMIY  9        # 1f:17 (1f:2c) 69  -  
+    TCMIY  9        # 1f:17 (1f:2c) 69  -  decimal borrow: a digit went below 0 -> set it to 9 and borrow from the next
     YNEC   0        # 1f:18 (1f:18) 50  -  
     BR     15       # 1f:19 (1f:30) ab  -  
     BR     24       # 1f:1a (1f:21) 86  -  
     TAM             # 1f:1b (1f:02) 27  -  
-    TCY    0        # 1f:1c (1f:05) 40  -  
+    TCY    0        # 1f:1c (1f:05) 40  -  ... and count the hex result UP by one
     IMAC            # 1f:1d (1f:0b) 3e  -  
     BR     21       # 1f:1e (1f:17) b8  -  
     TAM             # 1f:1f (1f:2e) 27  -  
@@ -2996,7 +2998,8 @@
 # -----------------------------------------------------------------------------
 # Page 2b
 
-    LDX    4        # 2b:00 (2b:00) 29  -  
+    # === MULT (F0B) and DIV (F0C): 6-digit (4-digit for DIV) decimal multiply/divide by repeated addition/subtraction. The second operand lives in the extended register bank (file 6); MULT clears it afterwards. ===
+    LDX    4        # 2b:00 (2b:00) 29  -  MULT (F0B): multiply the 6-digit decimal number in R0..R5 by the extended-register operand (file 6); result in R0..R5 (by repeated addition; CARRY on overflow > 999999)
     TCY    d        # 2b:01 (2b:01) 4b  -  
     TCMIY  0        # 2b:02 (2b:03) 60  -  
     LDX    7        # 2b:03 (2b:07) 2f  -  
@@ -3021,7 +3024,7 @@
     CALL   07       # 2b:16 (2b:16) fe  -  
     RETN            # 2b:17 (2b:2c) 0f  -  
     TCY    5        # 2b:18 (2b:18) 4a  -  
-    LDX    7        # 2b:19 (2b:30) 2f  -  
+    LDX    7        # 2b:19 (2b:30) 2f  -  inner loop: add / copy a multi-digit operand digit by digit
     TMA             # 2b:1a (2b:21) 21  -  
     LDX    5        # 2b:1b (2b:02) 2d  -  
     TAM             # 2b:1c (2b:05) 27  -  
@@ -3039,7 +3042,7 @@
     RETN            # 2b:28 (2b:2d) 0f  -  
     LDP    0        # 2b:29 (2b:1a) 10  -  
     BR     17       # 2b:2a (2b:34) ac  -  
-    CALL   00       # 2b:2b (2b:29) c0  -  
+    CALL   00       # 2b:2b (2b:29) c0  -  DIV (F0C): divide the extended-register operand by R0..R3 (repeated subtraction -> quotient + remainder)
     LDX    4        # 2b:2c (2b:12) 29  -  
     TCY    d        # 2b:2d (2b:24) 4b  -  
     MNEZ            # 2b:2e (2b:08) 3f  -  
@@ -3048,7 +3051,7 @@
     CALL   19       # 2b:31 (2b:04) f0  -  
     LDP    e        # 2b:32 (2b:09) 17  -  
     BR     00       # 2b:33 (2b:13) 80  -  
-    TCY    6        # 2b:34 (2b:26) 46  -  
+    TCY    6        # 2b:34 (2b:26) 46  -  read a digit input (R6-gated K read) used while forming the result
     SETR            # 2b:35 (2b:0c) 0d  -  
     TKA             # 2b:36 (2b:19) 08  -  
     RSTR            # 2b:37 (2b:32) 0c  -  

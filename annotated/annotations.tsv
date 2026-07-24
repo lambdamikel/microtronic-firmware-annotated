@@ -340,3 +340,27 @@
 19:00	SUBC handler (FCd): Rd = Rd - carry (subtract the borrow; for multi-digit subtraction)
 19:0d	ADC handler (FBd): Rd = Rd + carry (add the carry; for multi-digit addition)
 19:11	test the CARRY flag, then add 0 or 1 to Rd via the ADD tail (17:0c)
+
+# ===== Deep-dive: the heavy F0x operations =====
+# ----- Page 1d: HXDZ (hex -> decimal), operating on R13:R14:R15 -----
+1d:00	HXDZ (F03): convert the hex value R13 + 16*R14 + 256*R15 to 3 decimal digits in R13:R14:R15
+1d:01	stage R13:R14:R15 into the file-5 work area and clear the result (calls 1f:00)
+1d:02	is the (hex) value still nonzero?
+1d:08	count the hex value DOWN by one ...
+1d:0f	... and count the decimal result UP by one (per-digit BCD)
+1d:12	digit reached 10 -> carry: set it to 0 and bump the next decimal digit
+1d:17	carried past the 3rd digit (value > 999) = overflow -> zero the result, set the ZERO flag
+# ----- Page 1f: staging helper + DZHX (decimal -> hex) -----
+1f:00	stage R13:R14:R15 into the file-5 work area; clear the destination (shared by HXDZ and DZHX)
+1f:01	copy R13, R14, R15 (the value) into file 5
+1f:0e	DZHX loop: while the decimal value is nonzero ...
+1f:14	count the decimal value DOWN by one (BCD) ...
+1f:17	decimal borrow: a digit went below 0 -> set it to 9 and borrow from the next
+1f:1c	... and count the hex result UP by one
+# ----- Page 1e: RND -----
+1e:12	RND (F05): fill R13, R14, R15 with pseudo-random nibbles, copied from a continuously-updated counter area (file 5) - so the result depends on timing
+# ----- Page 2b: MULT and DIV (6-digit decimal, second operand in the extended bank file 6) -----
+2b:00	MULT (F0B): multiply the 6-digit decimal number in R0..R5 by the extended-register operand (file 6); result in R0..R5 (by repeated addition; CARRY on overflow > 999999)
+2b:19	inner loop: add / copy a multi-digit operand digit by digit
+2b:2b	DIV (F0C): divide the extended-register operand by R0..R3 (repeated subtraction -> quotient + remainder)
+2b:34	read a digit input (R6-gated K read) used while forming the result
