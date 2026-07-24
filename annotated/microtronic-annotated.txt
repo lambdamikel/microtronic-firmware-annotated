@@ -76,58 +76,59 @@
 # -----------------------------------------------------------------------------
 # Page 01
 
+    # === KEYPAD MATRIX SCAN. Strobes the key-column lines (R1..R5) one at a time and reads the row lines (K1..K4) with KNEZ/TKA. On a hit it saves the column (M(0,14)), debounces, reads the row (M(0,15)), and waits for release. The pressed key = (column, row). The K bus is shared: a column strobe selects keypad rows, R6 selects the DIN inputs, R11 selects the SRAM data. ===
     LDP    0        # 01:00 (01:00) 10  -  
     BR     00       # 01:01 (01:01) 80  -  
-    LDP    8        # 01:02 (01:03) 11  -  
+    LDP    8        # 01:02 (01:03) 11  -  prepare to scan: settle delay, then clear all input strobes (subroutine below)
     CALL   39       # 01:03 (01:07) ca  -  
     LDX    0        # 01:04 (01:0f) 28  -  
-    TCY    6        # 01:05 (01:1f) 46  -  
+    TCY    6        # 01:05 (01:1f) 46  -  clear R6 (the DIN input gate)
     RSTR            # 01:06 (01:3f) 0c  -  
-    TCY    b        # 01:07 (01:3e) 4d  -  
+    TCY    b        # 01:07 (01:3e) 4d  -  clear R11 (the KL / SRAM-data gate)
     RSTR            # 01:08 (01:3d) 0c  -  
-    TCY    5        # 01:09 (01:3b) 4a  -  
+    TCY    5        # 01:09 (01:3b) 4a  -  clear the column strobes R5..R1
     RSTR            # 01:0a (01:37) 0c  -  
     DYN             # 01:0b (01:2f) 04  -  
     BR     0a       # 01:0c (01:1e) b7  -  
-    RETN            # 01:0d (01:3c) 0f  -  
-    TCY    5        # 01:0e (01:39) 4a  -  
-    SETR            # 01:0f (01:33) 0d  -  
-    KNEZ            # 01:10 (01:27) 0e  -  
-    BR     1a       # 01:11 (01:0e) a1  -  
-    RSTR            # 01:12 (01:1d) 0c  -  
+    RETN            # 01:0d (01:3c) 0f  -  return
+    TCY    5        # 01:0e (01:39) 4a  -  SCAN: strobe key columns R5 down to R1, testing K for a pressed key
+    SETR            # 01:0f (01:33) 0d  -  drive column strobe R[Y]
+    KNEZ            # 01:10 (01:27) 0e  -  KNEZ: any key pressed in this column? (K != 0)
+    BR     1a       # 01:11 (01:0e) a1  -  yes -> a key is down (01:1a)
+    RSTR            # 01:12 (01:1d) 0c  -  no -> drop this column strobe and try the next
     DYN             # 01:13 (01:3a) 04  -  
-    BR     0f       # 01:14 (01:35) b3  -  
+    BR     0f       # 01:14 (01:35) b3  -  loop over the columns
     TCY    d        # 01:15 (01:2b) 4b  -  
     TBIT   0        # 01:16 (01:16) 38  -  
     BR     02       # 01:17 (01:2c) 83  -  
     LDP    5        # 01:18 (01:18) 1a  -  
     BR     02       # 01:19 (01:30) 83  -  
-    TYA             # 01:1a (01:21) 23  -  
+    TYA             # 01:1a (01:21) 23  -  key found: save the column number in M(0,14)
     TCY    e        # 01:1b (01:02) 47  -  
     TAM             # 01:1c (01:05) 27  -  
-    LDP    8        # 01:1d (01:0b) 11  -  
+    LDP    8        # 01:1d (01:0b) 11  -  debounce delay
     CALL   39       # 01:1e (01:17) ca  -  
     LDX    0        # 01:1f (01:2e) 28  -  
     TCY    e        # 01:20 (01:1c) 47  -  
     TMY             # 01:21 (01:38) 22  -  
-    SETR            # 01:22 (01:31) 0d  -  
-    RETN            # 01:23 (01:23) 0f  -  
-    KNEZ            # 01:24 (01:06) 0e  -  
+    SETR            # 01:22 (01:31) 0d  -  re-strobe the found column
+    RETN            # 01:23 (01:23) 0f  -  return
+    KNEZ            # 01:24 (01:06) 0e  -  still pressed after debounce? (else it was a bounce -> rescan)
     BR     27       # 01:25 (01:0d) b6  -  
     BR     02       # 01:26 (01:1b) 83  -  
-    TKA             # 01:27 (01:36) 08  -  
+    TKA             # 01:27 (01:36) 08  -  TKA: read the row bits K1..K4 (which key in this column); save in M(0,15)
     TCY    f        # 01:28 (01:2d) 4f  -  
     TAM             # 01:29 (01:1a) 27  -  
     LDP    8        # 01:2a (01:34) 11  -  
     CALL   39       # 01:2b (01:29) ca  -  
     LDX    0        # 01:2c (01:12) 28  -  
     CALL   20       # 01:2d (01:24) dc  -  
-    KNEZ            # 01:2e (01:08) 0e  -  
-    BR     2a       # 01:2f (01:11) b4  -  
+    KNEZ            # 01:2e (01:08) 0e  -  wait for the key to be released ...
+    BR     2a       # 01:2f (01:11) b4  -  ... keep looping until it is
     LDP    8        # 01:30 (01:22) 11  -  
     CALL   39       # 01:31 (01:04) ca  -  
     LDX    0        # 01:32 (01:09) 28  -  
-    LDP    2        # 01:33 (01:13) 14  -  
+    LDP    2        # 01:33 (01:13) 14  -  key accepted -> process it (12:02)
     BR     02       # 01:34 (01:26) 83  -  
     LDX    4        # 01:35 (01:0c) 29  -  
     TCY    6        # 01:36 (01:19) 46  -  
@@ -1676,11 +1677,12 @@
 # -----------------------------------------------------------------------------
 # Page 18
 
-    LDX    0        # 18:00 (18:00) 28  -  
+    # === I/O F-OPERATIONS. KIN (FFd): wait for a key, return its code in Rd. DOT (FEd): drive Rd onto the four output lines R7..R10. DIN (FDd): read the four input lines into Rd. Which source the K bus reads is chosen by R6 (DIN) / a column strobe (keypad) / R11 (SRAM). ===
+    LDX    0        # 18:00 (18:00) 28  -  KIN handler (FFd): wait for a keypress, return the key code in Rd
     TCY    d        # 18:01 (18:01) 4b  -  
-    TCMIY  3        # 18:02 (18:03) 6c  -  
+    TCMIY  3        # 18:02 (18:03) 6c  -  mark the "waiting for key input" state (M(0,13)=3)
     BR     38       # 18:03 (18:07) a5  -  
-    TCY    f        # 18:04 (18:0f) 4f  -  
+    TCY    f        # 18:04 (18:0f) 4f  -  Rd = M(0,15) = the scanned key value
     TMA             # 18:05 (18:1f) 21  -  
     LDX    1        # 18:06 (18:3f) 2c  -  
     TCY    0        # 18:07 (18:3e) 40  -  
@@ -1692,13 +1694,13 @@
     TCY    d        # 18:0d (18:3c) 4b  -  
     TCMIY  0        # 18:0e (18:39) 60  -  
     BR     34       # 18:0f (18:33) a6  -  
-    LDX    1        # 18:10 (18:27) 2c  -  
+    LDX    1        # 18:10 (18:27) 2c  -  DOT handler (FEd): output register Rd to the four DOT output lines
     TCY    0        # 18:11 (18:0e) 40  -  
     TMY             # 18:12 (18:1d) 22  -  
     LDX    7        # 18:13 (18:3a) 2f  -  
-    TMA             # 18:14 (18:35) 21  -  
+    TMA             # 18:14 (18:35) 21  -  A = R[M(1,0)] = Rd
     CALL   29       # 18:15 (18:2b) da  -  
-    LDX    3        # 18:16 (18:16) 2e  -  
+    LDX    3        # 18:16 (18:16) 2e  -  send it out: complement (09:23), then drive onto R7..R10 (0e:02)
     LDP    0        # 18:17 (18:2c) 10  -  
     TPC            # 18:18 (18:18) 0b  -  
     LDP    9        # 18:19 (18:30) 19  -  
@@ -1708,16 +1710,16 @@
     LDP    e        # 18:1d (18:0b) 17  -  
     CALL   02       # 18:1e (18:17) c3  -  
     BR     34       # 18:1f (18:2e) a6  -  
-    TCY    6        # 18:20 (18:1c) 46  -  
-    SETR            # 18:21 (18:38) 0d  -  
-    TKA             # 18:22 (18:31) 08  -  
-    RSTR            # 18:23 (18:23) 0c  -  
+    TCY    6        # 18:20 (18:1c) 46  -  DIN handler (FDd): read the four digital inputs into Rd
+    SETR            # 18:21 (18:38) 0d  -  set R6 -> route the external DIN lines onto the K bus
+    TKA             # 18:22 (18:31) 08  -  A = K = the four input bits
+    RSTR            # 18:23 (18:23) 0c  -  clear R6
     LDX    1        # 18:24 (18:06) 2c  -  
     TCY    0        # 18:25 (18:0d) 40  -  
     TMY             # 18:26 (18:1b) 22  -  
     LDX    7        # 18:27 (18:36) 2f  -  
-    TAM             # 18:28 (18:2d) 27  -  
-    MNEZ            # 18:29 (18:1a) 3f  -  
+    TAM             # 18:28 (18:2d) 27  -  Rd = A
+    MNEZ            # 18:29 (18:1a) 3f  -  helper: set the ZERO flag from whether the value is nonzero
     BR     30       # 18:2a (18:34) a2  -  
     TCY    d        # 18:2b (18:29) 4b  -  
     LDX    4        # 18:2c (18:12) 29  -  
@@ -1738,7 +1740,7 @@
     BR     3b       # 18:3b (18:2a) aa  -  
     LDP    4        # 18:3c (18:14) 12  -  
     CALL   3a       # 18:3d (18:28) d5  -  
-    TDO             # 18:3e (18:10) 0a  -  
+    TDO             # 18:3e (18:10) 0a  -  TDO output (F-op data path)
     RETN            # 18:3f (18:20) 0f  -  
 
 

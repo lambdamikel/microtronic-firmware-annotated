@@ -267,3 +267,40 @@
 0d:20	end of refresh: blank the segments and release R12
 0d:24	TDO with A=0 -> all segments off
 0d:28	step to the next digit (index - 1)
+
+# ===== Page 01: keypad matrix scan =====
+01:02	prepare to scan: settle delay, then clear all input strobes (subroutine below)
+01:05	clear R6 (the DIN input gate)
+01:07	clear R11 (the KL / SRAM-data gate)
+01:09	clear the column strobes R5..R1
+01:0d	return
+01:0e	SCAN: strobe key columns R5 down to R1, testing K for a pressed key
+01:0f	drive column strobe R[Y]
+01:10	KNEZ: any key pressed in this column? (K != 0)
+01:11	yes -> a key is down (01:1a)
+01:12	no -> drop this column strobe and try the next
+01:14	loop over the columns
+01:1a	key found: save the column number in M(0,14)
+01:1d	debounce delay
+01:22	re-strobe the found column
+01:23	return
+01:24	still pressed after debounce? (else it was a bounce -> rescan)
+01:27	TKA: read the row bits K1..K4 (which key in this column); save in M(0,15)
+01:2e	wait for the key to be released ...
+01:2f	... keep looping until it is
+01:33	key accepted -> process it (12:02)
+
+# ===== Page 18: the I/O F-operations (KIN / DOT / DIN) =====
+18:00	KIN handler (FFd): wait for a keypress, return the key code in Rd
+18:02	mark the "waiting for key input" state (M(0,13)=3)
+18:04	Rd = M(0,15) = the scanned key value
+18:10	DOT handler (FEd): output register Rd to the four DOT output lines
+18:14	A = R[M(1,0)] = Rd
+18:16	send it out: complement (09:23), then drive onto R7..R10 (0e:02)
+18:20	DIN handler (FDd): read the four digital inputs into Rd
+18:21	set R6 -> route the external DIN lines onto the K bus
+18:22	A = K = the four input bits
+18:23	clear R6
+18:28	Rd = A
+18:29	helper: set the ZERO flag from whether the value is nonzero
+18:3e	TDO output (F-op data path)

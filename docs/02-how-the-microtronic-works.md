@@ -460,11 +460,67 @@ firmware sets it per digit to drive the status dots — the `CARRY`, `ZERO`, and
 `1 Hz` indicators that appear on individual digits' decimal points (`0d:06`
 derives them from mode bits before the loop).
 
-### 6.3 What remains *(pending)*
+## 7. The keypad and digital I/O
 
-The keypad scan and `KIN` (which share the `R` strobes and the `K` inputs with
-the display and SRAM), the remaining `F` operations, and the built‑in `PGM`
-programs are the last passes on the [roadmap](../README.md#roadmap-and-status).
+The keypad, the digital inputs, and the digital outputs all hang off the same
+handful of I/O lines as the display and the SRAM. The organising idea is that the
+**`K` input bus is shared**, and which device drives it is chosen by whichever
+`R` output is currently strobed.
+
+### 7.1 The keypad matrix scan (page 01)
+
+The keys form a matrix: **columns** are driven by the strobe lines `R1`–`R5`
+(the same lines that strobe display digits, used in a different phase), and
+**rows** are read on the four `K` inputs. The scan (`01:0e`):
+
+```
+01:0e  TCY 5                 ; start at column R5
+01:0f  SETR                  ; drive this column
+01:10  KNEZ                  ; any key in this column down?  (K != 0)
+01:11  BR 1a                 ;   yes -> handle it
+01:12  RSTR / DYN / BR 0f    ;   no  -> next column (R4, R3, R2, R1)
+```
+
+On a hit it **saves the column** in `M(0,14)`, waits out a **debounce** delay and
+re‑tests, then **reads the row bits** with `TKA` into `M(0,15)`, and finally
+**waits for release**. The pressed key is identified by the (column, row) pair.
+When the machine is halted, the decoded key is dispatched as a command/function
+key by the ladder on page `1e` (`NEXT`, `RUN`, `PGM`, `CCE`, …).
+
+### 7.2 The I/O opcodes (page 18)
+
+| Op | Mnemonic | Handler | Behaviour |
+| --- | --- | --- | --- |
+| `FFd` | `KIN` | `18:00` | Wait for a keypress; return its code in `Rd` (from `M(0,15)`). |
+| `FEd` | `DOT` | `18:10` | Drive `Rd` onto the four output lines `R7`–`R10`. |
+| `FDd` | `DIN` | `18:20` | Read the four input lines into `Rd` (`SETR R6` / `TKA` / `RSTR R6`). |
+
+`DIN` sets `R6` to route the external inputs onto `K`; the keypad scan uses a
+column strobe instead; and the SRAM read (§5) uses `R11` (`KL`). Same `K` bus,
+three sources, selected by which `R` line is high.
+
+### 7.3 The I/O line map
+
+Putting the display, SRAM, and keypad passes together, the TMS1600's outputs
+carry these roles (time‑multiplexed where they overlap):
+
+| Line(s) | Role |
+| --- | --- |
+| `R0`–`R5` | the six display digit strobes; `R1`–`R5` double as keypad column strobes |
+| `R6` | gate that routes the external **DIN** inputs onto the `K` bus |
+| `R7`–`R10` | the four **DOT** output lines (also carry SRAM write data) |
+| `R11` | `KL` selector — routes the SRAM `L` data lines onto `K` (read) |
+| `R12` | asserted during display refresh (display enable) |
+| `R13` | SRAM **write‑enable** strobe |
+| `K1`–`K4` | shared input bus: keypad rows, or DIN inputs, or SRAM read data |
+| `O0`–`O7` | 7‑segment pattern (via the OPLA); also the SRAM address nibble (via `TDO`) |
+
+### 7.4 What remains *(pending)*
+
+The remaining `F` operations — `DISP`, the shifts (`SHR`/`SHL`), carry ops
+(`ADC`/`SUBC`), and the `F0x` extended group (`HALT`, `NOP`, `HXDZ`, `RND`,
+`TIME`, `CLEAR`, `MULT`, `DIV`) — and the built‑in `PGM` programs are the last
+passes on the [roadmap](../README.md#roadmap-and-status).
 
 ## 4. Display, keypad, SRAM, and the F‑operations *(pending)*
 

@@ -101,7 +101,7 @@ the LFSR ordering means and why the two addresses differ.
 - [x] Annotate: reset & self‑initialisation (pages `0f`, `00`)
 - [x] Annotate: the main interpreter loop and opcode dispatch (run check, fetch, PC advance, operand data path, and the full two‑level opcode→handler map incl. the F‑group)
 - [x] Annotate: 7‑segment display multiplexing (`0d`) and the OPLA segment decode; SRAM write (`0c`)
-- [ ] Annotate: the hex keypad scan and `KIN`
+- [x] Annotate: the hex keypad matrix scan (`01`) and the I/O opcodes `KIN`/`DOT`/`DIN` (`18`); the shared‑`K`‑bus model and full I/O line map
 - [x] Annotate: external 2114 SRAM read — the instruction fetch (`09:02`), addressing, and the `KL`/`L` data path (writes share the same machinery; covered with keypad/`PGM` entry)
 - [x] Annotate: arithmetic/logic opcodes, the flags (`M(4,13)`), and control flow (`GOTO`/`CALL`/`BRC`/`BRZ`)
 - [ ] Annotate: the `F` operations (HALT, display, RND, HXDZ, …)
