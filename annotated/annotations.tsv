@@ -40,12 +40,13 @@
 00:2d	... latch the K return lines into A
 00:2e	release R6
 
-# ===== Page 1c: interpreter dispatch head =====
-1c:00	main-loop body: load both operand registers into scratch before an ALU-class op
-1c:01	-> R[M(1,0)] (dest reg) into scratch M(4,15)   [calls 16:1b]
-1c:03	-> R[M(1,1)] (source reg) into A               [calls 16:20]
-1c:05	store the source value into scratch M(4,14)  (now M(4,14)=Rsource, M(4,15)=Rdest)
-1c:06	decode the operation from bits of M(0,15) and build M(0,14) (arithmetic-class; full trace in the ALU pass)
+# ===== Page 1c: OR handler (00) + run check (21) =====
+1c:00	OR handler (opcode A): Rd <- Rd OR Rs
+1c:01	load Rd = R[M(1,0)] into scratch M(4,15)   [calls 16:1b]
+1c:03	load Rs = R[M(1,1)] into A                 [calls 16:20]
+1c:05	store Rs into scratch M(4,14)  (now M(4,15)=Rd, M(4,14)=Rs)
+1c:06	bitwise OR: for each set bit of Rd (M(4,15)), set that bit in M(4,14) ...
+1c:1f	... then write the OR result (M(4,14)) back to Rd via 15:2f
 1c:21	RUN CHECK: is the execute-this-pass flag M(0,8) bit 3 set?
 1c:24	set -> go execute one instruction (1c:27)
 1c:25	clear -> hand off to the idle / keypad handler at 1e:1a
@@ -155,3 +156,59 @@
 11:37	FDd DIN  -> 18:20
 11:39	FEd DOT  -> 18:10
 11:3b	FFd KIN  -> 18:00
+
+# ===== Flags & arithmetic (M(4,13): bit0=CARRY, bit1=ZERO) =====
+# ----- Page 17: ADD / ADDI compute tail -----
+17:09	ADD/ADDI tail: A=Rd, add the resolved operand, set CARRY, write back to Rd
+17:0a	A = Rd  (calls the load-Rd helper 1a:00)
+17:0b	AMAAC: A = Rd + M(4,15) = Rd + operand; S = carry (sum > 15)
+17:0c	carry -> set the CARRY flag (17:1a)
+17:0e	no carry -> clear CARRY = M(4,13) bit 0
+17:1a	set CARRY = M(4,13) bit 0
+17:1c	write the sum back to Rd (-> write-back at 17:10)
+
+# ----- Page 16: SUB/SUBI + CMP/CMPI (subtract, set carry=no-borrow & zero) -----
+16:00	CMPI handler (opcode 9): compute Rd - n, set flags, discard the difference
+16:03	CMP handler (opcode 8): compute Rd - Rs, set flags, discard the difference
+16:05	SAMAN: A = M(4,15) - A = Rd - operand; S set if NO borrow (Rd >= operand)
+16:06	no borrow -> set CARRY (16:0a)
+16:07	borrow -> clear CARRY = M(4,13) bit 0
+16:0a	no borrow -> set CARRY = M(4,13) bit 0  (carry is "no borrow" on subtract)
+16:0c	CPAIZ: negate the difference; S set if the difference was zero
+16:0e	nonzero -> clear ZERO = M(4,13) bit 1
+16:12	zero -> set ZERO = M(4,13) bit 1
+16:16	SUBI handler (opcode 7): load Rd and immediate n; difference computed + stored to Rd
+16:1b	SUB handler (opcode 6): load Rd (source via 16:20); difference stored back to Rd
+
+# ----- Page 14: control flow (GOTO / CALL / BRC / BRZ) -----
+14:00	GOTO handler (opcode C): PC <- target address (M(1,1):M(1,0)) minus 1
+14:04	copy the 2-digit target operand into the SRAM pointer M(1,5):M(1,4)  (via 0f:2b)
+14:06	DMAN: target-low - 1 (pre-decrement; the fetch's pre-increment then lands on the target)
+14:0c	store the new PC into file 2 (PC) and file 3 (backup): low nibble ...
+14:13	... and high nibble
+14:1a	return
+14:1f	BRC handler (opcode D): branch iff CARRY (M(4,13) bit 0) is set
+14:21	test the carry flag
+14:22	carry set -> take the branch by reusing the GOTO handler (14:00)
+14:23	carry clear -> skip: go fetch the next instruction (08:02)
+14:27	BRZ handler (opcode E): branch iff ZERO (M(4,13) bit 1) is set
+14:29	test the zero flag
+14:2a	zero set -> take the branch (14:00)
+14:2b	zero clear -> skip (-> 14:23 -> next instruction)
+14:2c	CALL handler (opcode B): save the return address, then jump like GOTO
+14:30	XMA: exchange PC-low with the target (old PC-low into A)
+14:32	save old PC-low as the return address in M(1,13)
+14:36	XMA: exchange PC-high with the target
+14:38	save old PC-high as the return address in M(1,14)
+14:39	now set the PC to the target (-> 14:05), like GOTO
+
+# ----- Page 1a: shared helper + shifts -----
+1a:00	helper: A <- R[M(1,0)] = the destination register Rd (also stashed in M(1,15))
+1a:09	SHR body (F9d): shift Rd right one bit (bit tests/sets on the register nibble)
+1a:29	SHL body (FAd): load Rd, then shift it left one bit
+
+# ----- Page 15: AND / ANDI (bitwise) -----
+15:0d	ANDI handler (opcode 3): load Rd and immediate n, then bitwise-AND
+15:14	AND handler (opcode 2): load Rd and Rs, then bitwise-AND
+15:1a	bitwise AND: clear each result bit where the other operand's bit is 0
+15:2f	register write-back tail: store the ALU result (M(4,14)) into Rd, then continue

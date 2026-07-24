@@ -103,7 +103,7 @@ the LFSR ordering means and why the two addresses differ.
 - [ ] Annotate: 7‑segment display multiplexing and the LED/flag output
 - [ ] Annotate: the hex keypad scan and `KIN`
 - [ ] Annotate: external 2114 SRAM read/write
-- [ ] Annotate: arithmetic/logic Microtronic opcodes
+- [x] Annotate: arithmetic/logic opcodes, the flags (`M(4,13)`), and control flow (`GOTO`/`CALL`/`BRC`/`BRZ`)
 - [ ] Annotate: the `F` operations (HALT, display, RND, HXDZ, …)
 - [ ] Annotate: the built‑in `PGM` firmware programs (self‑test, cassette, clock, demos)
 

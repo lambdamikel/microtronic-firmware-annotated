@@ -8,8 +8,9 @@
 00:0c	Boot: zero RAM files 1..7 (CALL reuses the clear-file subroutine above).
 00:1a	Boot: run two init subroutines, then enter the interpreter.
 00:20	Keypad / input handling (full trace deferred to the keypad-scan pass).
-# ---- Page 1c: interpreter dispatch head (chapter 1, page c) ----
-1c:00	INTERPRETER main-loop body. Loads operand registers, dispatches by class, and (at 1c:21) either executes one instruction or handles idle/keypad input.
+# ---- Page 1c: OR handler + run check (chapter 1, page c) ----
+1c:00	OR handler (opcode A): Rd <- Rd OR Rs (bitwise). Shares the register write-back tail at 15:2f.
+1c:21	RUN CHECK (reached each interpreter pass): if the "execute this pass" flag M(0,8).3 is set, run one instruction (08:02); else service the keypad (1e:1a).
 1c:2c	(padding: 0x00 bytes to end of page)
 # ---- Page 16: operand-register fetch helpers (chapter 1, page 6) ----
 16:1b	Operand fetch helpers: resolve a register operand (file 7 = user registers R0..RF) into A / scratch.
@@ -21,3 +22,9 @@
 10:00	OPCODE DISPATCH. Decode command digit M(1,2) via an ACxAC (add-const, test-carry) ladder that catches F,E,...,5 in turn; 0-4 fall through to the second-level table on page 11. Each arm is an LDP p / BR off to that opcode's handler.
 # ---- Page 11: SECONDARY dispatch (0-4) + F-group sub-dispatch ----
 11:00	Second-level opcode dispatch: commands 0-4 (11:00), and the F-group decoded by its second digit (11:17 -> pages 18/19/1a, or 12:00 for F0-F8).
+# ---- Page 14: control-flow handlers (chapter 1, page 4) ----
+14:00	Control flow: GOTO/CALL set the program counter; BRC/BRZ test the flags in M(4,13) and, if set, branch by reusing GOTO. CALL saves the return address in M(1,13):M(1,14) (RET restores it).
+# ---- Page 16 (add flag banner) ----
+16:00	SUB/SUBI/CMP/CMPI: SAMAN computes Rd - operand; CARRY = "no borrow" (M(4,13).0), ZERO if the result is 0 (M(4,13).1). CMP/CMPI discard the difference; SUB/SUBI store it to Rd.
+# ---- Page 1a: load-Rd helper + shift ops ----
+1a:00	Shared helper 1a:00 = "A <- Rd". The rest of the page implements SHR (F9d) and SHL (FAd).

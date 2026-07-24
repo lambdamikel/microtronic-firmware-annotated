@@ -42,6 +42,7 @@ operand nibble. (Confirmed: `MOV`/`MOVI` read and write exactly these cells.)
 | `M(1,2)` | current instruction — **command** (opcode digit) |
 | `M(1,4)` | external SRAM address pointer — low nibble |
 | `M(1,5)` | external SRAM address pointer — high nibble |
+| `M(1,13)` / `M(1,14)` | saved return address (low/high) for `CALL`, restored by `RET` |
 | `M(1,15)` | temporary / working cell |
 
 A Microtronic instruction is three hex digits (`c s d`, e.g. `0` `A` `5`); the
@@ -52,9 +53,11 @@ counter (0–255). It is incremented each executed instruction and copied into t
 SRAM address pointer `M(1,5):M(1,4)` (see §3.2). `M(2,2)` holds interpreter
 state/mode bits.
 
-**File 4 — the ALU scratch.** `M(4,15)` and `M(4,14)` hold the two *resolved*
-operand values for the current instruction — `M(4,15)` the destination register's
-value, `M(4,14)` the source's — ready for the arithmetic/logic handlers.
+**File 4 — the ALU scratch and the flags.** `M(4,15)` and `M(4,14)` hold the two
+*resolved* operand values for the current instruction — typically `M(4,15)` the
+destination register's value and `M(4,14)` the source's. **`M(4,13)` is the flags
+cell: bit 0 = CARRY, bit 1 = ZERO** — the user‑visible flags that `BRC`/`BRZ`
+test and the arithmetic opcodes set (§4).
 
 **File 3 — backups.** Receives copies of the program counter (§3.2) and, via the
 page‑`0f` block‑copy helpers, of operand/register fields, so the interpreter can
@@ -226,8 +229,8 @@ With those primitives, the two simplest opcodes are two instructions each
 
 This is the template for the whole instruction set: **resolve operand(s) →
 compute → write back to `R[M(1,0)]`.** The arithmetic and logic opcodes add a
-compute step in the middle (using the two scratch operands `M(4,14)`/`M(4,15)`
-that the loop head at `1c:00` pre‑loads) and set the carry/zero flags.
+compute step in the middle (using the two scratch operands `M(4,14)`/`M(4,15)`)
+and set the carry/zero flags — see §4.
 
 ### 3.5 The opcode dispatch (page 10 → page 11)
 
@@ -288,12 +291,73 @@ reached through `12:00`.
 
 ### 3.7 The opcode handlers themselves *(next)*
 
-The dispatch skeleton is complete; the remaining interpreter work is filling in
-each handler's body: the arithmetic/logic tails and the carry/zero flags (pages
-`15`/`16`/`17`/`1c`); control flow — how `GOTO`/`CALL` set the PC and how `BRC`/
-`BRZ` test the flags (page `14`); and the F‑group bodies including the I/O
-opcodes (pages `18`/`19`/`1a`/`12`). Those are the arithmetic, keypad, display,
-SRAM, and F‑op passes on the [roadmap](../README.md#roadmap-and-status).
+The dispatch skeleton is complete. §4 covers the arithmetic/logic handlers and
+the flags; the display, keypad, SRAM, and remaining F‑op passes are on the
+[roadmap](../README.md#roadmap-and-status).
+
+## 4. Arithmetic, logic, flags, and control flow
+
+Every arithmetic/logic opcode follows the template from §3.4 — **resolve
+operand → compute → write back to `Rd`** — with the compute step working on the
+two scratch cells `M(4,15)` (the destination value `Rd`) and `M(4,14)`/`A` (the
+source value or immediate). The results feed two flags.
+
+### 4.1 The flags: `M(4,13)`
+
+The Microtronic's user‑visible flags are two bits of one RAM cell:
+
+| | Cell/bit | Set by | Read by |
+| --- | --- | --- | --- |
+| **CARRY** | `M(4,13)` bit 0 | ADD (overflow), SUB/CMP (no‑borrow), … | `BRC` |
+| **ZERO** | `M(4,13)` bit 1 | SUB/CMP (result == 0), … | `BRZ` |
+
+This is confirmed from both directions: the setters (`16:07`/`16:0a` for carry,
+`16:0e`/`16:12` for zero — all `X=4, Y=13`) and the readers (`14:1f`/`14:27`).
+
+### 4.2 Add and subtract
+
+**`ADD`/`ADDI`** (page 17) resolve the operand into `M(4,15)`, then:
+
+```
+17:0a  A = Rd                 ; load-Rd helper 1a:00
+17:0b  AMAAC ; A = Rd + M(4,15)   ; add operand; S = carry (sum > 15)
+17:0c..1c  set/clear CARRY, then write the sum back to Rd
+```
+
+**`SUB`/`SUBI`/`CMP`/`CMPI`** (page 16) use `SAMAN`:
+
+```
+16:05  SAMAN ; A = M(4,15) - A = Rd - operand ; S = (Rd >= operand) = "no borrow"
+16:06..0b    set CARRY = no-borrow
+16:0c  CPAIZ ; S = (difference == 0)
+16:0d..12    set ZERO accordingly
+```
+
+Note the Microtronic convention that **carry means "no borrow"** on a subtract —
+it is set when `Rd >= operand`. `CMP`/`CMPI` set the flags and discard the
+difference; `SUB`/`SUBI` store it back into `Rd`.
+
+### 4.3 Logic
+
+**`AND`/`ANDI`** (page 15) and **`OR`** (`1c:00`) combine `M(4,15)` and `M(4,14)`
+bit by bit — `AND` clears each result bit where the other operand is 0, `OR` sets
+each bit where the other operand is 1 — then write the result back to `Rd` via
+the shared register write‑back tail at `15:2f`.
+
+### 4.4 Control flow (page 14)
+
+- **`GOTO a`** — copy the two‑digit target `M(1,1):M(1,0)` into the SRAM address
+  pointer, then **decrement by one** and store it as the program counter. The
+  decrement is deliberate: the fetch step (§3.2) pre‑increments the PC, so
+  setting it to *target − 1* makes the next fetch read the target.
+- **`CALL a`** — the same, but first exchange (`XMA`) the current PC out and save
+  it as the return address in `M(1,13):M(1,14)`. The Microtronic's single‑level
+  `RET` (`F07`) restores it. (There is no stack — a second `CALL` overwrites the
+  saved return address, which is why Microtronic subroutines cannot nest.)
+- **`BRC a` / `BRZ a`** — test `M(4,13)` bit 0 / bit 1. If set, **take the branch
+  by falling into the `GOTO` handler** (`14:00`) with the same target; if clear,
+  skip to the next instruction. Reusing `GOTO` for the taken‑branch case is a
+  neat bit of ROM economy.
 
 ## 4. Display, keypad, SRAM, and the F‑operations *(pending)*
 
