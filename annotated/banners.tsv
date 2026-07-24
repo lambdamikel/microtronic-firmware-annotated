@@ -31,3 +31,7 @@
 # ---- Page 09: external 2114 SRAM instruction read ----
 09:02	EXTERNAL 2114 SRAM READ. Fetches one 3-nibble instruction into M(1,2):M(1,1):M(1,0). Address = {M(1,5):M(1,4) high bits, R5:R4 nibble-select}; R11=KL routes the L data lines onto K; each nibble is TKA'd and bit-inverted (09:23). Data is stored complemented in SRAM.
 09:23	Helper: one's-complement a nibble (used to invert SRAM data on read; also a general NOT).
+# ---- Page 0c: external 2114 SRAM write ----
+0c:02	EXTERNAL 2114 SRAM WRITE (mirror of the 09:02 read): address via 0b:20, the 3 data nibbles driven onto R7..R10, each latched by an R13 write strobe. Used by keypad program entry and the PGM loaders.
+# ---- Page 0d: 7-segment display refresh ----
+0d:00	7-SEGMENT DISPLAY REFRESH. Multiplexes the six digits: for each, TDO drives the segments (the hardware OPLA decodes the nibble to a 7-seg pattern) and SETR strobes that digit's common line (R0..R5); a short delay holds it lit, then RSTR moves to the next. SL into TDO = the decimal point (CARRY / ZERO / 1Hz flag dots).

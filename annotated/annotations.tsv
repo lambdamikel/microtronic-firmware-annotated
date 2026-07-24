@@ -34,7 +34,7 @@
 00:17	clear file 6
 00:19	clear file 7  -- all 128 RAM nibbles are now zero
 00:1b	CALL the complement-nibble helper 9:23 (here A=0 -> 0xF)
-00:1d	CALL 0e:02 (drives a nibble onto output lines R7..R10)
+00:1d	CALL 0e:02 (drives a nibble onto the SRAM data-out lines R7..R10)
 00:1f	enter the interpreter main loop at 7:1d
 00:2c	strobe R6 (drive a keypad column) ...
 00:2d	... latch the K return lines into A
@@ -241,3 +241,29 @@
 0b:29	TDO: present the address nibble on the O output lines
 0c:1a	address-output helper: clock the nibble's bits out on R6
 0c:21	place the 4 bits of a nibble onto output lines R0..R3
+
+# ===== Page 0c: external 2114 SRAM write (mirror of 09:02 read) =====
+0c:02	SRAM WRITE: move the instruction fields into place (file 3 -> file 1)
+0c:04	set up the target SRAM address (0b:20)
+0c:06	write nibble 0 (command); R5/R4 then step to nibbles 1 and 2
+0c:11	drive the nibble M(x,Y) onto the SRAM data lines R7..R10 (via 0e:02)
+0c:14	pulse R13 = the SRAM write-enable strobe ...
+0c:18	... release R13
+0c:19	return
+
+# ===== Page 0d: 7-segment display refresh (multiplexed) =====
+0d:02	turn all six digit strobes off (R5..R0)
+0d:06	set the flag decimal-dots from mode bits in M(x,7) (CARRY / ZERO / 1Hz)
+0d:0b	DIGIT REFRESH LOOP: multiplex the six 7-segment digits, 5 down to 0
+0d:0d	SL = this digit's decimal-point bit (fed to TDO alongside the value)
+0d:11	Y = M(x,14) = current digit index
+0d:12	A = M(x,Y) = that digit's value (0..F)
+0d:13	TDO: the hardware OPLA turns the nibble into a 7-segment pattern on the O lines
+0d:14	SETR R[index]: strobe this digit's common line (one of R0..R5) -> it lights
+0d:17	remember the digit index in M(x,8)
+0d:18	brief on-time delay (A counts 0->15)
+0d:1c	reload the digit index ...
+0d:1d	RSTR: turn this digit off before moving to the next
+0d:20	end of refresh: blank the segments and release R12
+0d:24	TDO with A=0 -> all segments off
+0d:28	step to the next digit (index - 1)

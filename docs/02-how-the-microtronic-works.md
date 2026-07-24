@@ -370,15 +370,17 @@ instruction out of it.
 
 The 2114's 1024 nibbles are organised as **256 slots of 4 nibbles each**. A slot
 holds one Microtronic instruction: nibble 0 = command, nibble 1 = middle digit,
-nibble 2 = last digit (nibble 3 unused). The 10‑bit SRAM address is assembled as:
+nibble 2 = last digit (nibble 3 unused). The address has two parts:
 
-```
-  address[9:2] = M(1,5):M(1,4)   ; the 8-bit instruction number (the program counter)
-  address[1:0] = R5 : R4         ; which nibble of the instruction
-```
+- the **8‑bit instruction number** `M(1,5):M(1,4)` — i.e. the program counter
+  (§3.2) — presented on the address lines by the setup routine `0b:20`;
+- a **2‑bit nibble select** toggled directly on outputs `R4`/`R5`, which the read
+  routine steps to walk the three nibbles of the instruction.
 
-So the program counter (§3.2) supplies the high 8 bits, and the firmware toggles
-two `R` output lines to walk the three nibbles of the current instruction.
+Together they span all 1024 nibbles as 256 four‑nibble slots. (The exact wiring
+of each address bit to a physical `R`/`O` pin is in the
+[PicoRAM 2090](https://github.com/lambdamikel/picoram2090) firmware; here we take
+the addressing at the logical level the firmware works in.)
 
 ### 5.2 Reading a nibble
 
@@ -408,13 +410,61 @@ Two hardware details worth flagging, both cross‑checked:
 ### 5.3 Where reads and writes happen
 
 Instruction *reads* are driven by the fetch (§3.2 → `09:02`) on every executed
-instruction. *Writes* to the SRAM happen when a program is entered or loaded —
-from the keypad (`NEXT`/digit entry) and from the `PGM` loaders — and share the
-same address‑output and `KL` machinery in the other direction. Those write paths
-belong to the keypad/`PGM` passes on the roadmap; the exact 2114 pin wiring
-(which `R`/`O` line carries which address bit) is documented in the
-[PicoRAM 2090](https://github.com/lambdamikel/picoram2090) firmware, which
-re‑implements this same SRAM interface.
+instruction. *Writes* use the mirror‑image routine on page **`0c`**: it sets up
+the same address (`0b:20`), drives each data nibble onto outputs **`R7`–`R10`**
+(via the nibble‑unpack helper `0e:02`), and latches it with a pulse on the
+**`R13`** write‑enable strobe. Writes happen when a program is entered from the
+keypad or loaded by a `PGM` program (those higher‑level paths are on the
+roadmap). Read data arrives on the `L` lines through the `KL` mux; write data
+leaves on `R7`–`R10`.
+
+## 6. The display: multiplexed 7‑segment output
+
+The Microtronic's six‑digit LED display is not memory‑mapped and has no frame
+buffer of segments — it is **multiplexed in software**. The refresh routine on
+page **`0d`** lights one digit at a time, fast enough that all six look steady,
+and this refresh doubles as the interpreter's main timing loop (it runs between
+executed instructions, which is part of what sets the machine's speed).
+
+### 6.1 The refresh loop
+
+The six digit values live in RAM (one nibble each). For each digit, from 5 down
+to 0:
+
+```
+0d:11  TMY           ; Y = M(x,14) = the current digit index
+0d:12  TMA           ; A = M(x,Y)  = that digit's value (0..F)
+0d:13  TDO           ; O bus = OPLA(SL:A)  -> the 7-segment pattern
+0d:14  SETR          ; R[index] = 1  -> strobe this digit's common line (R0..R5)
+       ... short delay (A counts 0->15) ...
+0d:1d  RSTR          ; R[index] = 0  -> turn the digit off
+0d:28  DMAN          ; index = index - 1, next digit
+```
+
+`R0`–`R5` are the six digit‑common strobes; only one is high at a time. Because
+the display, the keypad columns, and the SRAM address all borrow the same handful
+of `R` lines, these roles are **time‑multiplexed** — the firmware is careful to
+drive each subsystem only during its own phase.
+
+### 6.2 Segments come from the OPLA, not a font table
+
+There is no 7‑segment font in the ROM. `TDO` drives the eight `O` outputs through
+the **Output PLA** — a mask‑programmed lookup that converts the 5‑bit value
+`SL:A` into an arbitrary 8‑bit pattern. So loading a hex digit `0`–`F` into `A`
+and executing `TDO` emits that digit's segment pattern directly. The OPLA is why
+a 4‑bit machine can show hex glyphs "for free": the decode is baked into the
+silicon.
+
+The extra `SL` (status‑latch) bit into `TDO` selects the **decimal point**. The
+firmware sets it per digit to drive the status dots — the `CARRY`, `ZERO`, and
+`1 Hz` indicators that appear on individual digits' decimal points (`0d:06`
+derives them from mode bits before the loop).
+
+### 6.3 What remains *(pending)*
+
+The keypad scan and `KIN` (which share the `R` strobes and the `K` inputs with
+the display and SRAM), the remaining `F` operations, and the built‑in `PGM`
+programs are the last passes on the [roadmap](../README.md#roadmap-and-status).
 
 ## 4. Display, keypad, SRAM, and the F‑operations *(pending)*
 

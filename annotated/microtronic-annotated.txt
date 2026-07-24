@@ -35,7 +35,7 @@
     LDP    9        # 00:1a (00:21) 19  -  
     CALL   23       # 00:1b (00:02) e3  -  CALL the complement-nibble helper 9:23 (here A=0 -> 0xF)
     LDP    e        # 00:1c (00:05) 17  -  
-    CALL   02       # 00:1d (00:0b) c3  -  CALL 0e:02 (drives a nibble onto output lines R7..R10)
+    CALL   02       # 00:1d (00:0b) c3  -  CALL 0e:02 (drives a nibble onto the SRAM data-out lines R7..R10)
     LDP    7        # 00:1e (00:17) 1e  -  
     BR     1d       # 00:1f (00:2e) 8b  -  enter the interpreter main loop at 7:1d
     # === Keypad / input handling (full trace deferred to the keypad-scan pass). ===
@@ -840,11 +840,12 @@
 
     LDP    0        # 0c:00 (0c:00) 10  -  
     BR     00       # 0c:01 (0c:01) 80  -  
-    LDP    f        # 0c:02 (0c:03) 1f  -  
+    # === EXTERNAL 2114 SRAM WRITE (mirror of the 09:02 read): address via 0b:20, the 3 data nibbles driven onto R7..R10, each latched by an R13 write strobe. Used by keypad program entry and the PGM loaders. ===
+    LDP    f        # 0c:02 (0c:03) 1f  -  SRAM WRITE: move the instruction fields into place (file 3 -> file 1)
     CALL   0a       # 0c:03 (0c:07) f7  -  
-    LDP    b        # 0c:04 (0c:0f) 1d  -  
+    LDP    b        # 0c:04 (0c:0f) 1d  -  set up the target SRAM address (0b:20)
     CALL   20       # 0c:05 (0c:1f) dc  -  
-    TCY    2        # 0c:06 (0c:3f) 44  -  
+    TCY    2        # 0c:06 (0c:3f) 44  -  write nibble 0 (command); R5/R4 then step to nibbles 1 and 2
     CALL   11       # 0c:07 (0c:3e) ce  -  
     TCY    5        # 0c:08 (0c:3d) 4a  -  
     SETR            # 0c:09 (0c:3b) 0d  -  
@@ -855,15 +856,15 @@
     TCY    4        # 0c:0e (0c:39) 42  -  
     SETR            # 0c:0f (0c:33) 0d  -  
     TCY    0        # 0c:10 (0c:27) 40  -  
-    TMA             # 0c:11 (0c:0e) 21  -  
+    TMA             # 0c:11 (0c:0e) 21  -  drive the nibble M(x,Y) onto the SRAM data lines R7..R10 (via 0e:02)
     LDP    e        # 0c:12 (0c:1d) 17  -  
     CALL   02       # 0c:13 (0c:3a) c3  -  
-    TCY    d        # 0c:14 (0c:35) 4b  -  
+    TCY    d        # 0c:14 (0c:35) 4b  -  pulse R13 = the SRAM write-enable strobe ...
     SETR            # 0c:15 (0c:2b) 0d  -  
     TCY    d        # 0c:16 (0c:16) 4b  -  
     TCY    d        # 0c:17 (0c:2c) 4b  -  
-    RSTR            # 0c:18 (0c:18) 0c  -  
-    RETN            # 0c:19 (0c:30) 0f  -  
+    RSTR            # 0c:18 (0c:18) 0c  -  ... release R13
+    RETN            # 0c:19 (0c:30) 0f  -  return
     TMA             # 0c:1a (0c:21) 21  -  address-output helper: clock the nibble's bits out on R6
     TCY    f        # 0c:1b (0c:02) 4f  -  
     TAM             # 0c:1c (0c:05) 27  -  
@@ -907,47 +908,48 @@
 # -----------------------------------------------------------------------------
 # Page 0d
 
+    # === 7-SEGMENT DISPLAY REFRESH. Multiplexes the six digits: for each, TDO drives the segments (the hardware OPLA decodes the nibble to a 7-seg pattern) and SETR strobes that digit's common line (R0..R5); a short delay holds it lit, then RSTR moves to the next. SL into TDO = the decimal point (CARRY / ZERO / 1Hz flag dots). ===
     LDP    0        # 0d:00 (0d:00) 10  -  
     BR     00       # 0d:01 (0d:01) 80  -  
-    TCY    5        # 0d:02 (0d:03) 4a  -  
+    TCY    5        # 0d:02 (0d:03) 4a  -  turn all six digit strobes off (R5..R0)
     RSTR            # 0d:03 (0d:07) 0c  -  
     DYN             # 0d:04 (0d:0f) 04  -  
     BR     03       # 0d:05 (0d:1f) 87  -  
-    TCY    7        # 0d:06 (0d:3f) 4e  -  
+    TCY    7        # 0d:06 (0d:3f) 4e  -  set the flag decimal-dots from mode bits in M(x,7) (CARRY / ZERO / 1Hz)
     TBIT   2        # 0d:07 (0d:3e) 39  -  
     BR     38       # 0d:08 (0d:3d) a5  -  
     TBIT   3        # 0d:09 (0d:3b) 3b  -  
     BR     3d       # 0d:0a (0d:37) a8  -  
-    TCY    5        # 0d:0b (0d:2f) 4a  -  
+    TCY    5        # 0d:0b (0d:2f) 4a  -  DIGIT REFRESH LOOP: multiplex the six 7-segment digits, 5 down to 0
     CLA             # 0d:0c (0d:1e) 7f  -  
-    YNEA            # 0d:0d (0d:3c) 02  -  
+    YNEA            # 0d:0d (0d:3c) 02  -  SL = this digit's decimal-point bit (fed to TDO alongside the value)
     TCY    c        # 0d:0e (0d:39) 43  -  
     SETR            # 0d:0f (0d:33) 0d  -  
     TCY    e        # 0d:10 (0d:27) 47  -  
-    TMY             # 0d:11 (0d:0e) 22  -  
-    TMA             # 0d:12 (0d:1d) 21  -  
-    TDO             # 0d:13 (0d:3a) 0a  -  
-    SETR            # 0d:14 (0d:35) 0d  -  
+    TMY             # 0d:11 (0d:0e) 22  -  Y = M(x,14) = current digit index
+    TMA             # 0d:12 (0d:1d) 21  -  A = M(x,Y) = that digit's value (0..F)
+    TDO             # 0d:13 (0d:3a) 0a  -  TDO: the hardware OPLA turns the nibble into a 7-segment pattern on the O lines
+    SETR            # 0d:14 (0d:35) 0d  -  SETR R[index]: strobe this digit's common line (one of R0..R5) -> it lights
     TYA             # 0d:15 (0d:2b) 23  -  
     TCY    8        # 0d:16 (0d:16) 41  -  
-    TAMZA           # 0d:17 (0d:2c) 26  -  
-    ACxAC  0        # 0d:18 (0d:18) 70  -  
+    TAMZA           # 0d:17 (0d:2c) 26  -  remember the digit index in M(x,8)
+    ACxAC  0        # 0d:18 (0d:18) 70  -  brief on-time delay (A counts 0->15)
     BR     1b       # 0d:19 (0d:30) 82  -  
     BR     18       # 0d:1a (0d:21) 98  -  
     TCY    8        # 0d:1b (0d:02) 41  -  
-    TMY             # 0d:1c (0d:05) 22  -  
-    RSTR            # 0d:1d (0d:0b) 0c  -  
+    TMY             # 0d:1c (0d:05) 22  -  reload the digit index ...
+    RSTR            # 0d:1d (0d:0b) 0c  -  RSTR: turn this digit off before moving to the next
     BR     28       # 0d:1e (0d:17) ad  -  
     TCY    c        # 0d:1f (0d:2e) 43  -  
-    RSTR            # 0d:20 (0d:1c) 0c  -  
+    RSTR            # 0d:20 (0d:1c) 0c  -  end of refresh: blank the segments and release R12
     TCY    0        # 0d:21 (0d:38) 40  -  
     CLA             # 0d:22 (0d:31) 7f  -  
     YNEA            # 0d:23 (0d:23) 02  -  
-    TDO             # 0d:24 (0d:06) 0a  -  
+    TDO             # 0d:24 (0d:06) 0a  -  TDO with A=0 -> all segments off
     RETN            # 0d:25 (0d:0d) 0f  -  
     LDP    9        # 0d:26 (0d:1b) 19  -  
     BR     3b       # 0d:27 (0d:36) aa  -  
-    TCY    8        # 0d:28 (0d:2d) 41  -  
+    TCY    8        # 0d:28 (0d:2d) 41  -  step to the next digit (index - 1)
     DMAN            # 0d:29 (0d:1a) 07  -  
     BR     2c       # 0d:2a (0d:34) 92  -  
     BR     1f       # 0d:2b (0d:29) ae  -  
