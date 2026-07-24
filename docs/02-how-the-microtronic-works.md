@@ -29,29 +29,41 @@ below merges what Jason documented in his
 block‑copy routines reveal. Cells not yet confirmed are marked *(tbd)* and will
 be pinned down as their routines are traced.
 
-**File 1 — the interpreter's control block** (the best‑understood file):
+**File 7 — the user's 16 registers.** `M(7,0)`…`M(7,15)` *are* the Microtronic
+registers `R0`…`R15`. An opcode that names a register indexes file 7 by the
+operand nibble. (Confirmed: `MOV`/`MOVI` read and write exactly these cells.)
+
+**File 1 — the interpreter's control block:**
 
 | Cell | Role |
 | --- | --- |
-| `M(1,0)` | current instruction — operand **LSB** (low nibble) |
-| `M(1,1)` | current instruction — operand **MSB** (middle nibble) |
-| `M(1,2)` | current instruction — **command** (opcode nibble) |
-| `M(1,4)` | external SRAM address pointer — low bits |
-| `M(1,5)` | external SRAM address pointer — high bits |
+| `M(1,0)` | current instruction — **last** digit (destination‑register operand) |
+| `M(1,1)` | current instruction — **middle** digit (source‑register / immediate operand) |
+| `M(1,2)` | current instruction — **command** (opcode digit) |
+| `M(1,4)` | external SRAM address pointer — low nibble |
+| `M(1,5)` | external SRAM address pointer — high nibble |
 | `M(1,15)` | temporary / working cell |
 
-A Microtronic instruction is three hex digits (e.g. `F08`, `1A5`); the firmware
-holds it decomposed across `M(1,2)` (command) and `M(1,1)`/`M(1,0)` (the two
-operand nibbles), fetches it from the user's program in external SRAM, and
-dispatches on the command nibble.
+A Microtronic instruction is three hex digits (`c s d`, e.g. `0` `A` `5`); the
+firmware holds it decomposed across `M(1,2)`=`c`, `M(1,1)`=`s`, `M(1,0)`=`d`.
 
-**Files 0, 2, 3 — operand/register scratch** *(tbd, partially traced).* The
-block‑copy helpers on page `0f` shuffle 2–3 nibble blocks between files 0, 1, 2,
-and 3 (words 0–5). These look like save/restore of the working operand and
-register fields around subroutine calls; the exact ownership is being confirmed.
+**File 2 — the program counter.** `M(2,5):M(2,4)` is the 2‑nibble user program
+counter (0–255). It is incremented each executed instruction and copied into the
+SRAM address pointer `M(1,5):M(1,4)` (see §3.2). `M(2,2)` holds interpreter
+state/mode bits.
 
-**The user's 16 registers, and the carry/zero flags** *(tbd)* live in RAM too and
-are the subject of the arithmetic‑opcode pass.
+**File 4 — the ALU scratch.** `M(4,15)` and `M(4,14)` hold the two *resolved*
+operand values for the current instruction — `M(4,15)` the destination register's
+value, `M(4,14)` the source's — ready for the arithmetic/logic handlers.
+
+**File 3 — backups.** Receives copies of the program counter (§3.2) and, via the
+page‑`0f` block‑copy helpers, of operand/register fields, so the interpreter can
+save and restore working state around subroutine calls.
+
+**File 0 — flags & decode scratch.** `M(0,8)` holds mode/status bits — bit 3 is
+the "execute an instruction this pass" flag the main loop tests. `M(0,14)`/
+`M(0,15)` are used to decode the operation class. The user‑visible **carry** and
+**zero** flags live here too *(exact cells: pending the arithmetic pass)*.
 
 ## 2. Boot: from power‑on to the interpreter
 
@@ -139,12 +151,90 @@ is the first place the "deferred paging" idiom (§4 of doc 01) really bites, and
 it is why the running interpreter is spread across several pages rather than
 sitting in one contiguous block.
 
-## 3. The main interpreter loop *(pending)*
+## 3. The main interpreter loop
 
-*Next on the roadmap:* trace `1c:21` onward — how the firmware fetches the next
-three‑nibble Microtronic instruction from external SRAM into `M(1,2)`/`M(1,1)`/
-`M(1,0)`, advances the user program counter, and dispatches on the command
-nibble to one of the 16 opcode handlers.
+The interpreter proper lives in chapter 1 (pages `1c`, `16`, `15`, `17`, `1b`,
+`1e`) with the fetch/execute machinery down in chapter 0 (pages `08`, `09`). The
+pieces below are traced and annotated; the full opcode‑dispatch table is the next
+step.
+
+### 3.1 Run check (page 1c)
+
+Each pass through the loop reaches `1c:21`:
+
+```
+1c:21  LDX 0 / TCY 8 / TBIT 3   ; test M(0,8) bit 3 — "execute an instruction this pass?"
+1c:24  BR 27                    ;   set  -> execute one instruction
+1c:25  LDP e / BR 1a            ;   clear-> idle: keypad / command entry at 1e:1a
+1c:27  RBIT 3                   ; clear the flag for this pass
+1c:28  LDP 0 / TPC / LDP 8 / BR 02   ; drop to chapter 0, execute at 08:02
+```
+
+So the machine advances **one Microtronic instruction per loop pass** when the
+"run" bit is set; otherwise it services the keypad. Between passes the loop
+refreshes the display, which sets the Microtronic's real‑world instruction rate.
+
+### 3.2 Fetch and program‑counter advance (page 08)
+
+`08:02` is the execute‑one‑instruction entry. It first **advances the program
+counter** — the two‑nibble value in `M(2,5):M(2,4)`:
+
+```
+08:04  IMAC ; A = M(2,4)+1, carry if it was 15   (increment PC low)
+08:06  TAM  ; store PC low
+08:08  ...  ; on carry, increment PC high M(2,5)
+```
+
+then **copies the new PC into the SRAM address pointer** `M(1,5):M(1,4)` (and a
+backup in file 3):
+
+```
+08:0c..18  M(3,5)=M(1,5)=PChi ,  M(3,4)=M(1,4)=PClo
+```
+
+and finally **fetches the instruction from external SRAM** at that address:
+
+```
+08:1a  LDP 9 / CALL 02   ; -> SRAM read routine at 9:02
+```
+
+which loads the three nibbles into `M(1,2)` (command), `M(1,1)`, `M(1,0)`. The
+2114 SRAM read itself (bit‑banged over the `R` address/control lines and the `L`
+data lines through the `KL` multiplexer) is documented in its own pass.
+
+### 3.3 Operand resolution and write‑back (page 17)
+
+Once the instruction is in `M(1,*)`, page `17` provides the primitives every
+opcode is built from. File 7 is the register file:
+
+- **Resolve a register operand** (`17:00`): `Y ← M(1,1)`; `A ← M(7,Y)`; stash in
+  scratch `M(4,15)`. A shared entry at `17:02` lets the caller pick which operand
+  nibble to use (with `Y=0` it resolves `M(1,0)`, the destination register).
+- **Take an immediate** (`17:1d`): `A ← M(1,1)` (the literal middle digit).
+- **Write back** (`17:10`): `R[M(1,0)] ← A` — store the result into the
+  destination register named by the last digit.
+
+### 3.4 Worked example: `MOV` and `MOVI`
+
+With those primitives, the two simplest opcodes are two instructions each
+(`17:24`–`28`):
+
+| Microtronic op | Encoding | Implementation | Effect |
+| --- | --- | --- | --- |
+| `MOV s,d` | `0 s d` | `CALL 17:00` (A ← R[s]) then `BR 17:10` (R[d] ← A) | `Rd ← Rs` |
+| `MOVI n,d` | `1 n d` | `CALL 17:1d` (A ← n) then `BR 17:10` (R[d] ← A) | `Rd ← n` |
+
+This is the template for the whole instruction set: **resolve operand(s) →
+compute → write back to `R[M(1,0)]`.** The arithmetic and logic opcodes add a
+compute step in the middle (using the two scratch operands `M(4,14)`/`M(4,15)`
+that the loop head at `1c:00` pre‑loads) and set the carry/zero flags.
+
+### 3.5 The opcode dispatch table *(next)*
+
+*Next on the roadmap:* the 16‑way decode on the command digit `M(1,2)` — how the
+post‑fetch code at `08:1c` and the class‑decode at `1c:06` route each of the 16
+Microtronic opcodes (`MOV`, `MOVI`, arithmetic, `CALL`/`GOTO`, the branch
+conditions, and the `F` group) to its handler.
 
 ## 4. Display, keypad, SRAM, and the F‑operations *(pending)*
 

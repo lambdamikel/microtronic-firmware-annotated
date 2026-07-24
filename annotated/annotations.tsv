@@ -39,3 +39,60 @@
 00:2c	strobe R6 (drive a keypad column) ...
 00:2d	... latch the K return lines into A
 00:2e	release R6
+
+# ===== Page 1c: interpreter dispatch head =====
+1c:00	main-loop body: load both operand registers into scratch before an ALU-class op
+1c:01	-> R[M(1,0)] (dest reg) into scratch M(4,15)   [calls 16:1b]
+1c:03	-> R[M(1,1)] (source reg) into A               [calls 16:20]
+1c:05	store the source value into scratch M(4,14)  (now M(4,14)=Rsource, M(4,15)=Rdest)
+1c:06	decode the operation from bits of M(0,15) and build M(0,14) (arithmetic-class; full trace in the ALU pass)
+1c:21	RUN CHECK: is the execute-this-pass flag M(0,8) bit 3 set?
+1c:24	set -> go execute one instruction (1c:27)
+1c:25	clear -> hand off to the idle / keypad handler at 1e:1a
+1c:27	clear the flag for this pass ...
+1c:29	... switch to chapter 0 ...
+1c:2b	... and execute one instruction at 08:02
+
+# ===== Page 16: operand-register fetch helpers =====
+16:1b	fetch DEST register: Y=0 -> uses M(1,0); returns R[M(1,0)] in A and scratch M(4,15)  (via 17:02)
+16:20	fetch SOURCE register: Y=M(1,1); returns R[M(1,1)] in A; leaves X=4 for the caller
+16:22	Y = M(1,1)  (the source-register selector)
+16:24	A = R[source] = M(7, M(1,1))
+
+# ===== Page 08: instruction fetch + program-counter advance =====
+08:02	EXECUTE ONE INSTRUCTION. First advance the PC (2 nibbles: file 2, words 5:4)
+08:04	A = PC-low + 1  (S set if PC-low was 15 -> carry into PC-high)
+08:05	on carry, propagate into PC-high at 08:08
+08:06	store the incremented PC-low
+08:08	PC-low wrapped: store 0 and step Y to the high nibble
+08:09	A = PC-high + 1
+08:0b	store the incremented PC-high
+08:0c	copy the new PC to the SRAM address pointer + a file-3 backup ...
+08:0f	M(3,5) = PC-high   (backup)
+08:11	M(1,5) = PC-high   (SRAM address pointer, high)
+08:16	M(3,4) = PC-low    (backup)
+08:18	M(1,4) = PC-low    (SRAM address pointer, low)
+08:19	return
+08:1a	now fetch the instruction's nibbles from external SRAM at that address ...
+08:1b	-> SRAM read routine at 9:02 (loads M(1,2)=opcode, M(1,1)/M(1,0)=operands; see the SRAM pass)
+08:1c	post-fetch: branch on state/opcode-class flags, then dispatch (opcode-dispatch pass)
+
+# ===== Page 17: operand resolution + register write-back (chapter 1, page 7) =====
+17:00	resolve SOURCE operand: Y=M(1,1); fetch R[M(1,1)] into A and scratch M(4,15)
+17:02	shared entry: caller pre-loads Y with which operand nibble to use (Y=0 -> dest reg M(1,0))
+17:03	file 7 = the 16 user registers R0..RF
+17:04	A = R[operand]
+17:07	stash the resolved value in ALU scratch M(4,15)
+17:08	return
+17:10	WRITE-BACK: store A into the destination register R[M(1,0)]
+17:12	Y = M(1,0)  (the dest-register selector)
+17:14	R[M(1,0)] = A
+17:17	also keep a copy in temp M(1,15)
+17:19	continue at 1b:12
+17:1d	take the IMMEDIATE operand: A = M(1,1) (the literal middle digit), into scratch M(4,15)
+17:23	return
+17:24	--- opcode 0 (MOV s,d) and opcode 1 (MOVI n,d) ---
+17:25	MOV: A = R[source]   (calls 17:00)
+17:26	MOV: R[dest] = A     -> write-back at 17:10.  Net: Rd <- Rs
+17:27	MOVI: A = immediate n (calls 17:1d)
+17:28	MOVI: R[dest] = A    -> write-back at 17:10.  Net: Rd <- n

@@ -8,3 +8,12 @@
 00:0c	Boot: zero RAM files 1..7 (CALL reuses the clear-file subroutine above).
 00:1a	Boot: run two init subroutines, then enter the interpreter.
 00:20	Keypad / input handling (full trace deferred to the keypad-scan pass).
+# ---- Page 1c: interpreter dispatch head (chapter 1, page c) ----
+1c:00	INTERPRETER main-loop body. Loads operand registers, dispatches by class, and (at 1c:21) either executes one instruction or handles idle/keypad input.
+1c:2c	(padding: 0x00 bytes to end of page)
+# ---- Page 16: operand-register fetch helpers (chapter 1, page 6) ----
+16:1b	Operand fetch helpers: resolve a register operand (file 7 = user registers R0..RF) into A / scratch.
+# ---- Page 08: fetch + PC advance (chapter 0, page 8) ----
+08:02	EXECUTE-INSTRUCTION entry: advance the program counter, then fetch the next instruction from external SRAM.
+# ---- Page 17: operand resolution & register write-back (chapter 1, page 7) ----
+17:00	Operand data path: resolve source/immediate operands into A, write results back to the destination register. Home of MOV / MOVI.
