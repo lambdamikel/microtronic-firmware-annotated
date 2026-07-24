@@ -1,0 +1,67 @@
+LICENSE AND SCOPE
+=================
+
+This repository contains material under two different terms. Read this file
+before reusing anything from it.
+
+
+1. THE ADDED ANNOTATIONS AND DOCUMENTATION  —  CC BY 4.0
+--------------------------------------------------------
+
+The original work created for this repository — namely:
+
+  - everything under docs/
+  - everything under annotated/
+  - the annotation text (comments, labels, section banners) added to the
+    disassembly
+  - README.md, references/links.md, and any tooling scripts
+
+is Copyright (c) 2026 Michael A. Wessel and contributors, and is licensed under
+the Creative Commons Attribution 4.0 International License (CC BY 4.0).
+
+You are free to share and adapt this material for any purpose, even
+commercially, provided you give appropriate credit.
+
+  Human-readable summary: https://creativecommons.org/licenses/by/4.0/
+  Full legal code:        https://creativecommons.org/licenses/by/4.0/legalcode
+
+Attribution should credit "the annotated Microtronic firmware project by
+Michael A. Wessel and contributors" and, where practical, the reverse-
+engineering team named below whose work the annotations describe.
+
+
+2. THE FIRMWARE ROM AND ITS DISASSEMBLY  —  NOT under CC BY 4.0
+--------------------------------------------------------------
+
+The files:
+
+  - rom/microtronic.bin
+  - rom/microtronic-firmware-disassembled.txt
+
+are NOT covered by the license above. They are provided FOR REFERENCE, STUDY,
+AND HISTORICAL INTEREST ONLY.
+
+  - The Busch Microtronic 2090 firmware ROM is Copyright (c) 1981 Busch GmbH
+    (Busch Modellbau). It is reproduced here ONLY by the kind and explicit
+    permission of Mr. Joerg Vallen, co-designer of the Microtronic and CEO of
+    Busch Modellbau, who authorised publication of the operating-system ROM.
+    All rights in the firmware remain with Busch GmbH.
+
+  - The ROM dump was produced by Decle and Michael A. Wessel and refined by
+    Jason T. Jacques. The disassembly was produced by Decle's TMS1xxx
+    disassembler and hand-corrected by Jason T. Jacques.
+
+Do not treat the ROM image or its disassembly as freely licensed. If you wish
+to redistribute them, honour the permission under which they were published and
+credit Busch GmbH and the team above.
+
+
+3. THIRD-PARTY REFERENCE MATERIAL
+---------------------------------
+
+  - references/jason-tms1000-emulator.ino is Copyright (c) 2024-2025
+    Jason T. Jacques, included here as a reference copy under the terms of its
+    own project (GPLv3; see https://github.com/lambdamikel/microtronic-phoenix).
+
+  - references/tms1400info.pdf is Texas Instruments documentation, included for
+    convenience; all rights remain with the respective rights holders.

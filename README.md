@@ -115,6 +115,15 @@ It is provided here **for reference, study, and historical interest only.**
 If you build on this, please credit the team and honour Mr. Vallen's generosity
 in making the ROM public.
 
+### License
+
+- The **added annotations and documentation** (everything under `docs/` and
+  `annotated/`, this README, and any tooling) are licensed **[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)** — reuse freely with attribution.
+- The **firmware ROM and its disassembly** (`rom/`) are **not** under that
+  license; they remain © Busch GmbH, published by permission for reference only.
+
+See [`LICENSE`](LICENSE) for the exact scope of each.
+
 ## Further reading
 
 See [`references/links.md`](references/links.md) for Jason's technical writeup,
