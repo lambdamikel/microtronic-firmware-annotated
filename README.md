@@ -20,9 +20,11 @@ actually works**.
 > **Status:** the **"theory of operation" is complete** — [`docs/02`](docs/02-how-the-microtronic-works.md)
 > now traces the whole machine end to end (boot → fetch/decode/dispatch → every
 > opcode and `F`‑operation → display, keypad, SRAM → the built‑in programs), and
-> [`docs/01`](docs/01-tms1600-architecture.md) covers the host CPU. The inline
-> comment column of the [annotated listing](annotated/) is filled in for the core
-> routines of every subsystem and continues to grow. See [Roadmap](#roadmap-and-status).
+> [`docs/01`](docs/01-tms1600-architecture.md) covers the host CPU. **Every one of
+> the 4,096 instructions is commented**: the core routines of every subsystem carry
+> hand-written *semantic* notes (what the code is *for*), and every remaining line
+> gets an auto-generated *literal* decode (what the instruction *does*), derived
+> from the exact TMS1600 semantics. See [Roadmap](#roadmap-and-status).
 
 > 🌐 **Browse the annotated ROM online:** **[lambdamikel.github.io/microtronic-firmware-annotated](https://lambdamikel.github.io/microtronic-firmware-annotated/)**
 > — a colour-coded, searchable, cross-linked web view of all 64 pages. (Or open
@@ -61,10 +63,12 @@ a friendly 4‑bit computer into 4 KB of TMS1000‑family microcode.
 
 The canonical disassembly in `rom/` is **never edited**. Annotations live as data
 in `annotated/annotations.tsv` (per‑line comments) and `annotated/banners.tsv`
-(section headers), keyed by logical address; running
-`python3 dev-support/build_annotated.py` regenerates the annotated listing and
-reports coverage. This keeps the annotation reviewable as a diff and always
-re‑derivable from the untouched source.
+(section headers), keyed by logical address; any instruction without a
+hand‑written note falls back to a literal decode from `dev-support/gloss.py`, so
+the listing is 100% commented. Running `python3 dev-support/build_annotated.py`
+(text) and `python3 dev-support/build_html.py` (web page) regenerates both. This
+keeps the annotation reviewable as a diff and always re‑derivable from the
+untouched source.
 
 ### Documents
 
@@ -122,6 +126,8 @@ the LFSR ordering means and why the two addresses differ.
 - [x] Annotate: arithmetic/logic opcodes, the flags (`M(4,13)`), and control flow (`GOTO`/`CALL`/`BRC`/`BRZ`)
 - [x] Annotate: the `F` operations — the full three‑level dispatch and complete `F`‑op → handler map, **plus** deep‑dives on the heavy ops (`HXDZ`/`DZHX` count‑conversion, `RND`, `MULT`/`DIV` via the extended register bank)
 - [x] Annotate: the built‑in `PGM` programs — native self‑test/cassette vs. the demo (Nim) stored in ROM as embedded Microtronic code and loaded to SRAM
+- [x] 100% comment coverage: literal per‑instruction decode (`dev-support/gloss.py`) as a fallback under the hand‑written semantic notes
+- [ ] *Ongoing:* deepen the hand‑written semantic notes on the remaining lightly‑traced pages (chapters 2–3 `PGM`/self‑test/cassette internals)
 
 ## Provenance, credit, and permissions
 

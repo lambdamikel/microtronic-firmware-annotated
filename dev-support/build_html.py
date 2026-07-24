@@ -11,6 +11,10 @@ GitHub Pages. Run from the repo root:  python3 dev-support/build_html.py
 import html
 import os
 import re
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from gloss import gloss  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "rom", "microtronic-firmware-disassembled.txt")
@@ -73,7 +77,7 @@ def main():
 
     pages = []          # list of (page, [rows])
     cur = None
-    n_ann = n_total = 0
+    n_hand = n_gloss = n_total = 0
     with open(SRC, encoding="utf-8") as fh:
         for raw in fh:
             line = raw.rstrip("\n")
@@ -95,15 +99,20 @@ def main():
             mnem = parts[0]
             operand = parts[1] if len(parts) > 1 else ""
             addr = pg + off
-            comment = comments.get(f"{pg}:{off}", "")
+            hand = comments.get(f"{pg}:{off}", "")
             banner = banners.get(f"{pg}:{off}", "")
             n_total += 1
-            if comment:
-                n_ann += 1
-            cur[1].append((addr, pg, off, mnem, operand, hexb, comment, banner))
+            if hand:
+                n_hand += 1
+                comment, kind = hand, "hand"
+            else:
+                comment, kind = gloss(mnem, operand, hexb), "gloss"
+                if comment:
+                    n_gloss += 1
+            cur[1].append((addr, pg, off, mnem, operand, hexb, comment, banner, kind))
 
-    coverage = f"{n_ann}/{n_total}"
-    pct = (100.0 * n_ann / n_total) if n_total else 0
+    coverage = f"{n_hand}/{n_total}"
+    pct = (100.0 * n_hand / n_total) if n_total else 0
 
     # ---- build the nav (chapters -> pages, + named routines from banners) ----
     nav = []
@@ -118,7 +127,8 @@ def main():
 
     routines = []
     for page, rows in pages:
-        for (addr, pg, off, *_rest, banner) in rows:
+        for row in rows:
+            addr, pg, off, banner = row[0], row[1], row[2], row[7]
             if banner:
                 label = re.split(r"[.(]", banner.replace("\\n", " "))[0].strip()
                 if len(label) > 46:
@@ -136,14 +146,15 @@ def main():
             f'<section class="page"><h2 id="P{page}">Page {page}'
             f'<span class="cp">chapter {chap} · page {pp:x}</span></h2>'
         )
-        for (addr, pg, off, mnem, operand, hexb, comment, banner) in rows:
+        for (addr, pg, off, mnem, operand, hexb, comment, banner, kind) in rows:
             if banner:
                 for seg in banner.split("\\n"):
                     body.append(f'<div class="banner">{linkify(esc(seg))}</div>')
             cls = mn_class(mnem, hexb)
-            data_ann = "1" if comment else "0"
+            data_ann = "1" if kind == "hand" else "0"
             search = esc(f"{pg}:{off} {mnem} {operand} {comment}".lower())
-            cm = f'<span class="cm">{linkify(esc(comment))}</span>' if comment else ""
+            cmcls = "cm" if kind == "hand" else "cm gloss"
+            cm = f'<span class="{cmcls}">{linkify(esc(comment))}</span>' if comment else ""
             op = f'<span class="op">{esc(operand)}</span>' if operand else ""
             body.append(
                 f'<div class="row" id="L{addr}" data-a="{data_ann}" data-s="{search}">'
@@ -160,7 +171,8 @@ def main():
     )
     with open(OUT, "w", encoding="utf-8") as fh:
         fh.write(page_html)
-    print(f"wrote {OUT}  ({len(page_html)//1024} KB, {n_total} instructions, {coverage} annotated)")
+    print(f"wrote {OUT}  ({len(page_html)//1024} KB, {n_total} instructions; "
+          f"{n_hand} hand-annotated + {n_gloss} glossed = {n_hand+n_gloss} commented)")
 
 
 TEMPLATE = r"""<!doctype html>
@@ -248,6 +260,8 @@ main {{ padding:8px 20px 120px; min-width:0; }}
 .op {{ color:var(--op); }}
 .cm {{ color:var(--cm); font-style:italic; grid-column:5; }}
 .cm .xref {{ color:var(--xref); font-style:normal; }}
+.cm.gloss {{ color:var(--hex); font-style:normal; }}
+.cm.gloss .xref {{ color:var(--xref); }}
 .hide {{ display:none !important; }}
 body.annonly .row[data-a="0"] {{ display:none; }}
 footer {{ color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 60px; }}
@@ -264,7 +278,7 @@ footer {{ color:var(--dim); font-size:12px; text-align:center; padding:30px 20px
   <h1>Busch Microtronic 2090 <span class="sub">&mdash; Annotated Firmware ROM</span></h1>
   <div class="meta">
     The 1981 TMS1600 operating-system ROM, disassembled and annotated &nbsp;&middot;&nbsp;
-    <b>{coverage}</b> instructions annotated ({pct}%) &nbsp;&middot;&nbsp;
+    <b>{coverage}</b> instructions with hand-written notes &middot; every instruction has a literal decode &nbsp;&middot;&nbsp;
     <a href="https://github.com/lambdamikel/microtronic-firmware-annotated">repo</a> &middot;
     <a href="https://github.com/lambdamikel/microtronic-firmware-annotated/blob/master/docs/02-how-the-microtronic-works.md">how it works</a> &middot;
     <a href="https://github.com/lambdamikel/microtronic-firmware-annotated/blob/master/docs/04-discoveries.md">discoveries</a>
@@ -279,7 +293,8 @@ footer {{ color:var(--dim); font-size:12px; text-align:center; padding:30px 20px
     <span><b style="color:var(--io)">io</b> R/O/K lines</span>
     <span><b style="color:var(--test)">test</b> sets status</span>
     <span><b style="color:var(--op)">operand</b></span>
-    <span><b style="color:var(--cm)">annotation</b> (click <b style="color:var(--xref)">nn:nn</b> refs to jump)</span>
+    <span><b style="color:var(--cm)"><i>hand-written note</i></b> &middot; <b style="color:var(--hex)">literal decode</b></span>
+    <span>click <b style="color:var(--xref)">nn:nn</b> refs to jump</span>
   </div>
 </header>
 <div class="wrap">
