@@ -24,10 +24,9 @@ actually works**.
 > comment column of the [annotated listing](annotated/) is filled in for the core
 > routines of every subsystem and continues to grow. See [Roadmap](#roadmap-and-status).
 
-> 🌐 **Browse the ROM as a web page:** open [`index.html`](index.html) locally, or
-> enable GitHub Pages (Settings → Pages → deploy from `master` / root) to read it
-> at `https://lambdamikel.github.io/microtronic-firmware-annotated/` — a
-> colour-coded, searchable, cross-linked view of all 64 pages.
+> 🌐 **Browse the annotated ROM online:** **[lambdamikel.github.io/microtronic-firmware-annotated](https://lambdamikel.github.io/microtronic-firmware-annotated/)**
+> — a colour-coded, searchable, cross-linked web view of all 64 pages. (Or open
+> [`index.html`](index.html) locally.)
 
 ---
 
@@ -56,7 +55,7 @@ a friendly 4‑bit computer into 4 KB of TMS1000‑family microcode.
 | [`rom/microtronic-firmware-disassembled.txt`](rom/microtronic-firmware-disassembled.txt) | Decle's TMS1xxx disassembly, hand‑corrected by Jason (canonical, unmodified). |
 | [`docs/`](docs/) | The "theory of operation": the TMS1600 chip, and how the Microtronic VM is built on top of it. |
 | [`annotated/`](annotated/) | The generated annotated listing, plus the annotation source (`annotations.tsv`, `banners.tsv`) it is built from. |
-| [`index.html`](index.html) | A single self-contained **web page** rendering of the whole annotated ROM — colour-coded, searchable, with a page/routine sidebar and clickable cross-references. Open it locally, or serve it via GitHub Pages. |
+| [`index.html`](index.html) | A single self-contained **web page** rendering of the whole annotated ROM — colour-coded, searchable, with a page/routine sidebar and clickable cross-references. Live at **[lambdamikel.github.io/microtronic-firmware-annotated](https://lambdamikel.github.io/microtronic-firmware-annotated/)**. |
 | [`dev-support/`](dev-support/) | `build_annotated.py` (text listing) and `build_html.py` (the web page) — both regenerate their output from the canonical disassembly + annotation source. |
 | [`references/`](references/) | Curated links and local copies of the primary sources (Jason's emulator, TI docs). |
 
