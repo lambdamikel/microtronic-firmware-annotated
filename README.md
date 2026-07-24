@@ -77,6 +77,10 @@ re‑derivable from the untouched source.
   means that a frontier model reverse‑engineered this firmware in an afternoon —
   the human feat of the ROM dump, why traditional tools struggle with the
   TMS1000 family, and the dual‑use implications for firmware security.
+- [`docs/04-discoveries.md`](docs/04-discoveries.md) — the fun part: the
+  cleverest, strangest, and most tedious things found in the firmware — the
+  font‑in‑silicon display, `HALT`‑is‑just‑a‑jump, maths by counting, the demo
+  that's a Microtronic program hiding in the ROM, and more.
 
 ## How to read the annotated disassembly
 
