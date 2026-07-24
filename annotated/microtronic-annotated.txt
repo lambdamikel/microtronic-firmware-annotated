@@ -33,9 +33,9 @@
     CALL   06       # 00:19 (00:30) ff  -  clear file 7  -- all 128 RAM nibbles are now zero
     # === Boot: run two init subroutines, then enter the interpreter. ===
     LDP    9        # 00:1a (00:21) 19  -  
-    CALL   23       # 00:1b (00:02) e3  -  CALL init subroutine at 9:23
+    CALL   23       # 00:1b (00:02) e3  -  CALL the complement-nibble helper 9:23 (here A=0 -> 0xF)
     LDP    e        # 00:1c (00:05) 17  -  
-    CALL   02       # 00:1d (00:0b) c3  -  CALL init subroutine at 0e:02 (unpacks a nibble onto R7..R10)
+    CALL   02       # 00:1d (00:0b) c3  -  CALL 0e:02 (drives a nibble onto output lines R7..R10)
     LDP    7        # 00:1e (00:17) 1e  -  
     BR     1d       # 00:1f (00:2e) 8b  -  enter the interpreter main loop at 7:1d
     # === Keypad / input handling (full trace deferred to the keypad-scan pass). ===
@@ -631,40 +631,42 @@
 
     LDP    0        # 09:00 (09:00) 10  -  
     BR     00       # 09:01 (09:01) 80  -  
-    TCY    b        # 09:02 (09:03) 4d  -  
-    SETR            # 09:03 (09:07) 0d  -  
-    LDP    b        # 09:04 (09:0f) 1d  -  
+    # === EXTERNAL 2114 SRAM READ. Fetches one 3-nibble instruction into M(1,2):M(1,1):M(1,0). Address = {M(1,5):M(1,4) high bits, R5:R4 nibble-select}; R11=KL routes the L data lines onto K; each nibble is TKA'd and bit-inverted (09:23). Data is stored complemented in SRAM. ===
+    TCY    b        # 09:02 (09:03) 4d  -  READ INSTRUCTION from SRAM into M(1,2):M(1,1):M(1,0)
+    SETR            # 09:03 (09:07) 0d  -  set R11 = the KL selector -> routes the SRAM L data lines onto the K bus
+    LDP    b        # 09:04 (09:0f) 1d  -  put the instruction's SRAM address on the output lines (via 0b:20)
     CALL   20       # 09:05 (09:1f) dc  -  
-    LDP    e        # 09:06 (09:3f) 17  -  
+    LDP    e        # 09:06 (09:3f) 17  -  settle delay for the SRAM access (0e:36)
     CALL   36       # 09:07 (09:3e) d9  -  
-    TKA             # 09:08 (09:3d) 08  -  
-    CALL   23       # 09:09 (09:3b) e3  -  
-    TCY    2        # 09:0a (09:37) 44  -  
+    TKA             # 09:08 (09:3d) 08  -  A = K = the L data nibble
+    CALL   23       # 09:09 (09:3b) e3  -  invert it (SRAM data is stored complemented) via 09:23
+    TCY    2        # 09:0a (09:37) 44  -  M(1,2) = command digit (nibble 0)
     TAM             # 09:0b (09:2f) 27  -  
-    TCY    5        # 09:0c (09:1e) 4a  -  
+    TCY    5        # 09:0c (09:1e) 4a  -  set R5 -> select the middle nibble
     SETR            # 09:0d (09:3c) 0d  -  
     LDP    e        # 09:0e (09:39) 17  -  
-    CALL   36       # 09:0f (09:33) d9  -  
+    CALL   36       # 09:0f (09:33) d9  -  settle, then read
     TKA             # 09:10 (09:27) 08  -  
     CALL   23       # 09:11 (09:0e) e3  -  
-    TCY    1        # 09:12 (09:1d) 48  -  
+    TCY    1        # 09:12 (09:1d) 48  -  M(1,1) = middle digit (nibble 1)
     TAM             # 09:13 (09:3a) 27  -  
-    TCY    5        # 09:14 (09:35) 4a  -  
+    TCY    5        # 09:14 (09:35) 4a  -  clear R5 ...
     RSTR            # 09:15 (09:2b) 0c  -  
-    TCY    4        # 09:16 (09:16) 42  -  
+    TCY    4        # 09:16 (09:16) 42  -  ... set R4 -> select the last nibble
     SETR            # 09:17 (09:2c) 0d  -  
     LDP    e        # 09:18 (09:18) 17  -  
-    CALL   36       # 09:19 (09:30) d9  -  
+    CALL   36       # 09:19 (09:30) d9  -  settle, then read
     TKA             # 09:1a (09:21) 08  -  
     CALL   23       # 09:1b (09:02) e3  -  
-    TCY    0        # 09:1c (09:05) 40  -  
+    TCY    0        # 09:1c (09:05) 40  -  M(1,0) = last digit (nibble 2)
     TAM             # 09:1d (09:0b) 27  -  
-    TCY    4        # 09:1e (09:17) 42  -  
+    TCY    4        # 09:1e (09:17) 42  -  clear R4
     RSTR            # 09:1f (09:2e) 0c  -  
-    TCY    b        # 09:20 (09:1c) 4d  -  
+    TCY    b        # 09:20 (09:1c) 4d  -  clear R11 -> KL back to keyboard-scan mode
     RSTR            # 09:21 (09:38) 0c  -  
-    RETN            # 09:22 (09:31) 0f  -  
-    TCY    f        # 09:23 (09:23) 4f  -  
+    RETN            # 09:22 (09:31) 0f  -  return
+    # === Helper: one's-complement a nibble (used to invert SRAM data on read; also a general NOT). ===
+    TCY    f        # 09:23 (09:23) 4f  -  helper: one's-complement the nibble in A (flip all 4 bits)
     TAM             # 09:24 (09:06) 27  -  
     TBIT   0        # 09:25 (09:0d) 38  -  
     BR     33       # 09:26 (09:1b) 93  -  
@@ -678,7 +680,7 @@
     TBIT   3        # 09:2e (09:08) 3b  -  
     BR     39       # 09:2f (09:11) 8a  -  
     SBIT   3        # 09:30 (09:22) 33  -  
-    TMA             # 09:31 (09:04) 21  -  
+    TMA             # 09:31 (09:04) 21  -  A = the complemented nibble
     RETN            # 09:32 (09:09) 0f  -  
     RBIT   0        # 09:33 (09:13) 34  -  
     BR     28       # 09:34 (09:26) ad  -  
@@ -799,16 +801,16 @@
     LDP    0        # 0b:1d (0b:0b) 10  -  
     CALL   07       # 0b:1e (0b:17) fe  -  
     BR     16       # 0b:1f (0b:2e) 96  -  
-    LDX    1        # 0b:20 (0b:1c) 2c  -  
+    LDX    1        # 0b:20 (0b:1c) 2c  -  set up the SRAM address: drive M(1,5):M(1,4) onto the address lines
     TCY    5        # 0b:21 (0b:38) 4a  -  
     LDP    c        # 0b:22 (0b:31) 13  -  
     CALL   1a       # 0b:23 (0b:23) e1  -  
     TCY    0        # 0b:24 (0b:06) 40  -  
     CLA             # 0b:25 (0b:0d) 7f  -  
     YNEA            # 0b:26 (0b:1b) 02  -  
-    TCY    4        # 0b:27 (0b:36) 42  -  
+    TCY    4        # 0b:27 (0b:36) 42  -  A = M(1,4) (address low nibble) ...
     TMA             # 0b:28 (0b:2d) 21  -  
-    TDO             # 0b:29 (0b:1a) 0a  -  
+    TDO             # 0b:29 (0b:1a) 0a  -  TDO: present the address nibble on the O output lines
     RETN            # 0b:2a (0b:34) 0f  -  
     LDP    5        # 0b:2b (0b:29) 1a  -  
     BR     02       # 0b:2c (0b:12) 83  -  
@@ -862,14 +864,14 @@
     TCY    d        # 0c:17 (0c:2c) 4b  -  
     RSTR            # 0c:18 (0c:18) 0c  -  
     RETN            # 0c:19 (0c:30) 0f  -  
-    TMA             # 0c:1a (0c:21) 21  -  
+    TMA             # 0c:1a (0c:21) 21  -  address-output helper: clock the nibble's bits out on R6
     TCY    f        # 0c:1b (0c:02) 4f  -  
     TAM             # 0c:1c (0c:05) 27  -  
     TCY    6        # 0c:1d (0c:0b) 46  -  
     RSTR            # 0c:1e (0c:17) 0c  -  
     DYN             # 0c:1f (0c:2e) 04  -  
     BR     1e       # 0c:20 (0c:1c) 97  -  
-    TCY    f        # 0c:21 (0c:38) 4f  -  
+    TCY    f        # 0c:21 (0c:38) 4f  -  place the 4 bits of a nibble onto output lines R0..R3
     TBIT   0        # 0c:22 (0c:31) 38  -  
     BR     2b       # 0c:23 (0c:23) a9  -  
     TBIT   1        # 0c:24 (0c:06) 3a  -  
@@ -1028,7 +1030,7 @@
     BR     04       # 0e:33 (0e:13) 8f  -  
     LDP    7        # 0e:34 (0e:26) 1e  -  
     BR     31       # 0e:35 (0e:0c) 84  -  
-    CLA             # 0e:36 (0e:19) 7f  -  
+    CLA             # 0e:36 (0e:19) 7f  -  SRAM settle delay: count A 0->15 twice, then return (waits for valid data)
     ACxAC  0        # 0e:37 (0e:32) 70  -  
     BR     3a       # 0e:38 (0e:25) 95  -  
     BR     37       # 0e:39 (0e:0a) b2  -  

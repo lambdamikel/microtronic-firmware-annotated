@@ -33,8 +33,8 @@
 00:15	clear file 5
 00:17	clear file 6
 00:19	clear file 7  -- all 128 RAM nibbles are now zero
-00:1b	CALL init subroutine at 9:23
-00:1d	CALL init subroutine at 0e:02 (unpacks a nibble onto R7..R10)
+00:1b	CALL the complement-nibble helper 9:23 (here A=0 -> 0xF)
+00:1d	CALL 0e:02 (drives a nibble onto output lines R7..R10)
 00:1f	enter the interpreter main loop at 7:1d
 00:2c	strobe R6 (drive a keypad column) ...
 00:2d	... latch the K return lines into A
@@ -212,3 +212,32 @@
 15:14	AND handler (opcode 2): load Rd and Rs, then bitwise-AND
 15:1a	bitwise AND: clear each result bit where the other operand's bit is 0
 15:2f	register write-back tail: store the ALU result (M(4,14)) into Rd, then continue
+
+# ===== Page 09: external 2114 SRAM instruction read =====
+09:02	READ INSTRUCTION from SRAM into M(1,2):M(1,1):M(1,0)
+09:03	set R11 = the KL selector -> routes the SRAM L data lines onto the K bus
+09:04	put the instruction's SRAM address on the output lines (via 0b:20)
+09:06	settle delay for the SRAM access (0e:36)
+09:08	A = K = the L data nibble
+09:09	invert it (SRAM data is stored complemented) via 09:23
+09:0a	M(1,2) = command digit (nibble 0)
+09:0c	set R5 -> select the middle nibble
+09:0f	settle, then read
+09:12	M(1,1) = middle digit (nibble 1)
+09:14	clear R5 ...
+09:16	... set R4 -> select the last nibble
+09:19	settle, then read
+09:1c	M(1,0) = last digit (nibble 2)
+09:1e	clear R4
+09:20	clear R11 -> KL back to keyboard-scan mode
+09:22	return
+09:23	helper: one's-complement the nibble in A (flip all 4 bits)
+09:31	A = the complemented nibble
+
+# ----- SRAM address / strobe helpers -----
+0e:36	SRAM settle delay: count A 0->15 twice, then return (waits for valid data)
+0b:20	set up the SRAM address: drive M(1,5):M(1,4) onto the address lines
+0b:27	A = M(1,4) (address low nibble) ...
+0b:29	TDO: present the address nibble on the O output lines
+0c:1a	address-output helper: clock the nibble's bits out on R6
+0c:21	place the 4 bits of a nibble onto output lines R0..R3

@@ -28,3 +28,6 @@
 16:00	SUB/SUBI/CMP/CMPI: SAMAN computes Rd - operand; CARRY = "no borrow" (M(4,13).0), ZERO if the result is 0 (M(4,13).1). CMP/CMPI discard the difference; SUB/SUBI store it to Rd.
 # ---- Page 1a: load-Rd helper + shift ops ----
 1a:00	Shared helper 1a:00 = "A <- Rd". The rest of the page implements SHR (F9d) and SHL (FAd).
+# ---- Page 09: external 2114 SRAM instruction read ----
+09:02	EXTERNAL 2114 SRAM READ. Fetches one 3-nibble instruction into M(1,2):M(1,1):M(1,0). Address = {M(1,5):M(1,4) high bits, R5:R4 nibble-select}; R11=KL routes the L data lines onto K; each nibble is TKA'd and bit-inverted (09:23). Data is stored complemented in SRAM.
+09:23	Helper: one's-complement a nibble (used to invert SRAM data on read; also a general NOT).

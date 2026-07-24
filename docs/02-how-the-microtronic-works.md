@@ -359,6 +359,63 @@ the shared register write‑back tail at `15:2f`.
   skip to the next instruction. Reusing `GOTO` for the taken‑branch case is a
   neat bit of ROM economy.
 
+## 5. External memory: the 2114 SRAM
+
+The user's program (and its data area) does not live in the TMS1600's tiny
+internal RAM — it lives in an **external 2114 static RAM**, 1024 × 4 bits, wired
+to the TMS1600's I/O lines. Everything the interpreter does begins by reading an
+instruction out of it.
+
+### 5.1 Addressing: 256 instruction slots
+
+The 2114's 1024 nibbles are organised as **256 slots of 4 nibbles each**. A slot
+holds one Microtronic instruction: nibble 0 = command, nibble 1 = middle digit,
+nibble 2 = last digit (nibble 3 unused). The 10‑bit SRAM address is assembled as:
+
+```
+  address[9:2] = M(1,5):M(1,4)   ; the 8-bit instruction number (the program counter)
+  address[1:0] = R5 : R4         ; which nibble of the instruction
+```
+
+So the program counter (§3.2) supplies the high 8 bits, and the firmware toggles
+two `R` output lines to walk the three nibbles of the current instruction.
+
+### 5.2 Reading a nibble
+
+The data bus is the TMS1600's `L` inputs, reached through the `KL` multiplexer.
+The read routine (`09:02`) is a clean four‑step handshake per nibble:
+
+```
+09:03  SETR (Y=11)     ; R11 = KL selector = 1  -> route the L data lines onto the K bus
+09:04  CALL 0b:20      ; drive the address (M(1,5):M(1,4)) onto the output lines
+09:06  CALL 0e:36      ; settle delay — wait for the 2114's data to be valid
+09:08  TKA             ; A = K = the L data nibble
+09:09  CALL 09:23      ; one's-complement it (SRAM data is stored inverted)
+       ... store to M(1,2), bump R5/R4, repeat for M(1,1) and M(1,0) ...
+09:20  RSTR (Y=11)     ; R11 = 0  -> KL back to keyboard-scan mode
+```
+
+Two hardware details worth flagging, both cross‑checked:
+
+- **`R11` is the `KL` selector.** Setting it makes `TKA`/`KNEZ` read the SRAM `L`
+  lines instead of the keypad; the firmware sets it around every SRAM access and
+  clears it afterwards. (Jason's emulator defines `get_kl()` as exactly bit 11 of
+  the `R` register.)
+- **SRAM data is complemented.** Every nibble read is passed through the
+  one's‑complement helper `09:23`, so the bits on the `L` lines are the inverse of
+  the stored value. (The write path inverts correspondingly.)
+
+### 5.3 Where reads and writes happen
+
+Instruction *reads* are driven by the fetch (§3.2 → `09:02`) on every executed
+instruction. *Writes* to the SRAM happen when a program is entered or loaded —
+from the keypad (`NEXT`/digit entry) and from the `PGM` loaders — and share the
+same address‑output and `KL` machinery in the other direction. Those write paths
+belong to the keypad/`PGM` passes on the roadmap; the exact 2114 pin wiring
+(which `R`/`O` line carries which address bit) is documented in the
+[PicoRAM 2090](https://github.com/lambdamikel/picoram2090) firmware, which
+re‑implements this same SRAM interface.
+
 ## 4. Display, keypad, SRAM, and the F‑operations *(pending)*
 
 *Also on the roadmap:* the 7‑segment multiplexing and flag LEDs; the hex keypad
