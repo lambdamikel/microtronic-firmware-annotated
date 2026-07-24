@@ -1,0 +1,10 @@
+# <logical-addr> \t <banner text>   (use \n inside text for multi-line banners)
+# ---- Page 0f: reset vector + RAM block-copy helpers ----
+0f:00	RESET / boot entry -- power-on begins here (chapter 0, page F, PC 0)
+0f:02	RAM block-copy helpers: save/restore of the interpreter's operand & register fields (files 0-3, words 0-5). Called from the main loop, not from the boot path.
+# ---- Page 00: boot initialisation ----
+00:00	BOOT INIT (entered via the 0f trampoline).\n[00:00-04] doubles as the 'clear all R outputs' subroutine; at boot its RETN hits an empty stack and falls through into the file-clear below.
+00:05	Subroutine 'clear RAM file X' (callable entry = 00:06). At boot it runs inline to clear file 0, then falls through.
+00:0c	Boot: zero RAM files 1..7 (CALL reuses the clear-file subroutine above).
+00:1a	Boot: run two init subroutines, then enter the interpreter.
+00:20	Keypad / input handling (full trace deferred to the keypad-scan pass).

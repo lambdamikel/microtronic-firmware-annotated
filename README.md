@@ -48,8 +48,16 @@ a friendly 4‑bit computer into 4 KB of TMS1000‑family microcode.
 | [`rom/microtronic.bin`](rom/microtronic.bin) | The recovered 4,096‑byte firmware ROM image (canonical, unmodified). |
 | [`rom/microtronic-firmware-disassembled.txt`](rom/microtronic-firmware-disassembled.txt) | Decle's TMS1xxx disassembly, hand‑corrected by Jason (canonical, unmodified). |
 | [`docs/`](docs/) | The "theory of operation": the TMS1600 chip, and how the Microtronic VM is built on top of it. |
-| [`annotated/`](annotated/) | The disassembly with the comment column filled in, plus labels and section banners. |
+| [`annotated/`](annotated/) | The generated annotated listing, plus the annotation source (`annotations.tsv`, `banners.tsv`) it is built from. |
+| [`dev-support/`](dev-support/) | `build_annotated.py` — merges the annotation source into the canonical disassembly to produce `annotated/microtronic-annotated.txt`. |
 | [`references/`](references/) | Curated links and local copies of the primary sources (Jason's emulator, TI docs). |
+
+The canonical disassembly in `rom/` is **never edited**. Annotations live as data
+in `annotated/annotations.tsv` (per‑line comments) and `annotated/banners.tsv`
+(section headers), keyed by logical address; running
+`python3 dev-support/build_annotated.py` regenerates the annotated listing and
+reports coverage. This keeps the annotation reviewable as a diff and always
+re‑derivable from the untouched source.
 
 ### Documents
 
@@ -88,8 +96,9 @@ the LFSR ordering means and why the two addresses differ.
 
 - [x] Gather and verify the primary sources (ROM, disassembly, Jason's emulator, TI docs)
 - [x] `docs/01` — TMS1600 host architecture reference
-- [ ] `docs/02` — the Microtronic virtual machine (reset → main loop → decode/dispatch)
-- [ ] Annotate: reset & self‑initialisation
+- [x] Annotation pipeline (`dev-support/build_annotated.py` + `annotated/*.tsv`)
+- [~] `docs/02` — the Microtronic virtual machine (boot done; main loop → decode/dispatch next)
+- [x] Annotate: reset & self‑initialisation (pages `0f`, `00`)
 - [ ] Annotate: the main interpreter loop and opcode dispatch
 - [ ] Annotate: 7‑segment display multiplexing and the LED/flag output
 - [ ] Annotate: the hex keypad scan and `KIN`

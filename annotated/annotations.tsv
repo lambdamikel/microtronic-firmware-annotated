@@ -1,0 +1,41 @@
+# <logical-addr> \t <comment>   appended after the '-' in the annotated listing.
+# Blank lines and #-comments are ignored. Grows as routines are traced.
+
+# ===== Page 0f: reset vector =====
+0f:00	arm page 0 (PB=0) for the branch below
+0f:01	S=1 so this is taken: jump to 00:00, the real boot init
+0f:02	copy 3-nibble block  file0[0..2] -> file3[0..2]
+0f:08	loop, Y counting 2 -> 0
+0f:0a	copy  file3[0..2] -> file1[0..2]
+0f:12	copy  file0[0..2] -> file1[0..2]
+0f:1a	copy  file1[0..2] -> file3[0..2]
+0f:22	copy  file0[0..1] -> file2[0..1]  (2 nibbles)
+0f:2a	copy within file0:  word0 -> word4,  word1 -> word5
+0f:34	broadcast file0 words 4,5 into files 2 and 3
+0f:35	CALL 0f:37 handles word 4; then TCY 5 + fall-through handles word 5
+0f:3e	padding (byte 0x00 disassembles as MNEA)
+0f:3f	padding (byte 0x00 disassembles as MNEA)
+
+# ===== Page 00: boot initialisation =====
+00:00	Y = 15; begin clearing R outputs from the top
+00:01	R[Y] = 0
+00:03	loop: clears R15..R0 (all output/strobe lines off)
+00:04	return; at boot the call stack is empty, so execution falls through to 00:05
+00:05	X = 0: clear file 0 inline (the reusable subroutine entry is 00:06)
+00:07	A = 0
+00:08	M(X,15) = 0
+00:0a	loop: zero all 16 words of file X
+00:0b	return; at boot falls through to the file-1..7 clears below
+00:0d	clear file 1
+00:0f	clear file 2
+00:11	clear file 3
+00:13	clear file 4
+00:15	clear file 5
+00:17	clear file 6
+00:19	clear file 7  -- all 128 RAM nibbles are now zero
+00:1b	CALL init subroutine at 9:23
+00:1d	CALL init subroutine at 0e:02 (unpacks a nibble onto R7..R10)
+00:1f	enter the interpreter main loop at 7:1d
+00:2c	strobe R6 (drive a keypad column) ...
+00:2d	... latch the K return lines into A
+00:2e	release R6
