@@ -5,6 +5,30 @@ you grin, the things that defied expectation, and the parts that were just a
 slog. Here are the ones that stuck, from four decades of a designer's cleverness
 packed into 4 KB.
 
+## Credit and provenance
+
+Several of these were mapped first by Jason T. Jacques in his own
+[disassembly write-up](https://jsonj.co.uk/project/microtronic/), and this list
+stands on that work. To keep the record honest:
+
+- **Documented by Jason (and in several cases identified by him first):** the
+  bit‑inverted SRAM storage; the excessively long RAM read delay *and* its fixes
+  (a two‑instruction `CPAIZ`+`DAN`, or a non‑inverting buffer); the LFSR program
+  counter; the shared K/L input bus; the OPLA hex→segment decode; the empty‑stack
+  `RETN` being a no‑op; and the embedded **Nim** program, which he disassembled in
+  full ("69 12‑bit words").
+- **New in this pass:** `HALT` as a bare branch into the run‑check; `BRC`/`BRZ`
+  falling through into `GOTO`; the boot sequence chaining subroutines via
+  fall‑through (built on Jason's empty‑stack rule); the `ACxAC`
+  add‑constant/test‑carry dispatch ladder; register/immediate opcodes sharing a
+  handler; the "all the hard maths is counting" structure; `RND`'s entropy from the
+  free‑running idle counter; `RND` writing three registers; and the hidden extended
+  register bank (RAM file 6).
+- **Candidates still to verify:** exactly why `RND` fills three registers, and the
+  purpose of the periodic register updates — the latter most likely tied to the
+  software timekeeping behind the Show/Set‑Time built‑ins (see the roadmap at the
+  end).
+
 ## The genuinely clever
 
 **The display has no font.** A hex digit `0`–`F` is turned into a seven‑segment
@@ -29,9 +53,12 @@ a little.
 **Subroutines that fall through their own `RETN`.** At boot, the very first thing
 that runs is the "clear all outputs" subroutine — but it's reached by falling into
 it, not calling it. Its terminating `RETN`, hit with an empty call stack, does
-nothing and lets execution continue into the *next* subroutine. So one block of
-code serves as both a callable routine and an inline boot step. The boot sequence
-is a chain of these fall‑throughs. Ruthlessly economical.
+nothing — a behaviour Jason documents ("if our call stack is empty then this
+instruction is a no-op") — and lets execution continue into the *next* subroutine.
+So one block of code serves as both a callable routine and an inline boot step, and
+the boot sequence is a chain of these fall‑throughs. (The empty‑stack rule is
+Jason's; what's noted here is the boot path *using* it to sequence the init steps.)
+Ruthlessly economical.
 
 **Dispatch by "add a constant and check for carry."** Every jump table in the ROM
 — the 16‑way opcode decode, the F‑group, the F0x group — avoids a tree of bit
@@ -156,3 +183,28 @@ then subtract one — two instructions) would have done it, or a non‑inverting
 would have removed the need entirely. Elegant design, over‑built access path: the
 hardware and firmware engineers were clearly still learning as they went. It was a
 privilege to take apart either way.
+
+## Known gaps and roadmap
+
+This pass mapped the interpreter and the major subsystems, but the annotation is
+uneven — more than half the ROM's pages currently carry only a mechanical,
+per‑instruction decode. Some of that is genuine `0x00` padding that needs nothing;
+some is real substance still to be traced. The main pieces of unfinished work:
+
+- **The seven built‑in `PGM` functions.** The `PGM` key invokes native TMS1600
+  routines — **0** Self‑Test, **1** Save, **2** Load, **3** Show Time, **4** Set
+  Time, **5** Clear RAM, **6** Load‑NOP — and none is yet documented as such.
+  Early candidates: Clear‑RAM reuses the `clear RAM file X` subroutine at `00:05`;
+  Self‑Test looks like page `05` (it lamp‑tests the display outputs and launches
+  the Nim demo); Load and Load‑NOP go through the SRAM writer at `0c:02`;
+  Show/Set‑Time is the 1 Hz software‑clock code — the "adjacent timekeeping" Jason
+  noted but did not publish. Tracing these is the next focused effort.
+- **The Nim program as a listing.** It is stored as bytecode in `3a–3f` and
+  identified, but not yet rendered as a Microtronic assembly listing *in this
+  repo* (Jason has one in his write‑up).
+- **~25 pages of native routines** — cassette FSK timing, operand data paths,
+  display and arithmetic helpers — that have a per‑instruction gloss but no
+  high‑level note. Several bear more than mechanical decode.
+
+None of this is hidden; it is simply the part of a 4 KB ROM that a first end‑to‑end
+pass reaches last. It is flagged here so the map's edges are honest.
