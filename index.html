@@ -232,6 +232,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <a href="#L1f00" class="navrt"><span class="navaddr">1f:00</span>R13:R14:R15 staging helper</a>
 <a href="#L2904" class="navrt"><span class="navaddr">29:04</span>F0x EXTENDED-OP DISPATCH</a>
 <a href="#L2b00" class="navrt"><span class="navaddr">2b:00</span>MULT</a>
+<a href="#L3000" class="navrt"><span class="navaddr">30:00</span>PGM 6 = LOAD-NOP handler</a>
 <a href="#L3a00" class="navrt"><span class="navaddr">3a:00</span>PGM 7 = the NIM GAME</a>
   </nav>
   <main>
@@ -3438,6 +3439,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L2f3f" data-a="0" data-s="2f:3f mnea  (unused — 0x00 fill)"><a class="addr" href="#L2f3f">2f:3f</a><span class="hex">00</span><span class="pad">MNEA</span><span class="cm gloss">(unused — 0x00 fill)</span></div>
 </section>
 <section class="page"><h2 id="P30">Page 30<span class="cp">chapter 3 · page 0</span></h2>
+<div class="banner">PGM 6 = LOAD-NOP handler (VERIFIED by emulation: press PGM then 6 -&gt; all 256 program slots become F01). An ACxAC command sub-dispatch (<a class="xref" href="#L3000">30:00</a>-0e) routes to the fill routine: setup at <a class="xref" href="#L3013">30:13</a> seeds the SRAM address pointer M(1,5):M(1,4)=FF, then the loop <a class="xref" href="#L301f">30:1f</a>-30 walks that 8-bit address down to 0, writing NOP (F01) into each slot via the SRAM writer at <a class="xref" href="#L0c02">0c:02</a> (called from <a class="xref" href="#L3029">30:29</a>, returning to <a class="xref" href="#L302a">30:2a</a>), until the address wraps. This is the built-in that blanks the program store to NOPs. Confirmed by running the ROM in dev-support/microtronic_emu.py.</div>
 <div class="row" id="L3000" data-a="0" data-s="30:00 tma  a = m(x,y)"><a class="addr" href="#L3000">30:00</a><span class="hex">21</span><span class="mn">TMA</span><span class="cm gloss">A = M(X,Y)</span></div>
 <div class="row" id="L3001" data-a="0" data-s="30:01 acxac 6 a = a + 6 + 1 (status = carry)"><a class="addr" href="#L3001">30:01</a><span class="hex">76</span><span class="mn">ACxAC</span><span class="op">6</span><span class="cm gloss">A = A + 6 + 1 (status = carry)</span></div>
 <div class="row" id="L3002" data-a="0" data-s="30:02 br 3b if status: branch to 3b"><a class="addr" href="#L3002">30:02</a><span class="hex">aa</span><span class="flow">BR</span><span class="op">3b</span><span class="cm gloss">if status: branch to 3b</span></div>

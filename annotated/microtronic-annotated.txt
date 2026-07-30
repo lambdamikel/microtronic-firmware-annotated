@@ -3347,6 +3347,7 @@
 # -----------------------------------------------------------------------------
 # Page 30
 
+    # === PGM 6 = LOAD-NOP handler (VERIFIED by emulation: press PGM then 6 -> all 256 program slots become F01). An ACxAC command sub-dispatch (30:00-0e) routes to the fill routine: setup at 30:13 seeds the SRAM address pointer M(1,5):M(1,4)=FF, then the loop 30:1f-30 walks that 8-bit address down to 0, writing NOP (F01) into each slot via the SRAM writer at 0c:02 (called from 30:29, returning to 30:2a), until the address wraps. This is the built-in that blanks the program store to NOPs. Confirmed by running the ROM in dev-support/microtronic_emu.py. ===
     TMA             # 30:00 (30:00) 21  -  A = M(X,Y)
     ACxAC  6        # 30:01 (30:01) 76  -  A = A + 6 + 1 (status = carry)
     BR     3b       # 30:02 (30:03) aa  -  if status: branch to 3b

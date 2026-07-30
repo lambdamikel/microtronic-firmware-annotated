@@ -201,9 +201,14 @@ some is real substance still to be traced. The main pieces of unfinished work:
   (3/4) read sits behind the `TIME` handler at `12:18` (Jason's "adjacent
   timekeeping"); Clear‑RAM (5) reuses the `clear RAM file X` subroutine at `00:05`;
   Load and Load‑NOP (1/6) drive the SRAM writer at `0c:02`; Load/Save (1/2) add the
-  cassette FSK timing. Documenting each as its own section is the next focused
-  effort. (PicoRAM re‑implements Load/Save as SD‑card operations, in its own
-  firmware — not the mask ROM.)
+  cassette FSK timing. **Load‑NOP (6) is now fully traced and verified**: its handler
+  is page `30` — an `ACxAC` sub‑dispatch, then a loop that walks the SRAM address
+  `M(1,5):M(1,4)` from `FF` down to `0`, writing `F01` (NOP) into every slot. This was
+  confirmed by *running the ROM* in the new headless emulator
+  (`dev-support/microtronic_emu.py`): boot to idle, press `PGM` then `6`, and all 256
+  program slots become `F01`, with the writer called from `30:2a`. Documenting the
+  remaining five as their own sections is the next focused effort. (PicoRAM
+  re‑implements Load/Save as SD‑card operations, in its own firmware — not the mask ROM.)
 - **PGM 7 — the Nim game.** The eighth `PGM`, and the *only* built‑in stored as
   **Microtronic** code rather than native TMS: its bytecode lives in `3a–3f` (three
   `TCMIY` constants per instruction — stored low‑nibble‑first — `CALL`'d into SRAM
