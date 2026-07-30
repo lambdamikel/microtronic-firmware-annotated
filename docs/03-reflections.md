@@ -76,8 +76,9 @@ to validate against, and Jason's public write‑up — which it read, as it read
 manuals, and which already described much of this. What the model added was speed,
 breadth, and a single consistently annotated synthesis of the whole ROM — plus a
 handful of inferences Jason had not published (for instance, why `RND` touches
-three registers, and the purpose of some periodic register updates). Those newer
-findings are best treated as candidates to verify, not settled fact.
+three registers, and the purpose of some periodic register updates). Those have since
+been verified by running the ROM in the emulator: `RND` copies a free‑running counter
+`M(5,d:e:f)` into `R13:R14:R15`, and that counter is the periodic update.
 
 ## Why this is not a job for Ghidra
 

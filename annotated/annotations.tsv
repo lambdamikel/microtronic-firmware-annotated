@@ -378,3 +378,6 @@
 38:28	TONE HALF-CYCLE (high half): drive the tape output lines R14/R15 HIGH, then poll the timing-reference bit on DIN (read at 38:2e) until it flips; 38:35 then drives them LOW. Each half-period is clocked by the 32.768kHz-derived crystal reference, NOT the CPU - which is exactly why the tape bit timing is precise and machine-independent (see the 'one crystal, two jobs' note in docs/04).
 38:2e	TKA: read the 32.768kHz-derived timing reference on a DIN line (via the R6 gate). Polling this bit is what clocks each tone half-cycle - the crystal, not the rubbery RC CPU clock, sets the tape timing.
 38:35	end of the tone half-cycle: drive the tape output lines R14/R15 LOW (the low half, mirror of 38:28).
+
+# ----- RND free-running counter (verified by emulation) -----
+0b:2d	Increments the free-running RND counter M(5,d):M(5,e):M(5,f) once per idle pass (reached from the idle loop ~05:31). This counter is the entropy source RND (1e:12) copies into R13:R14:R15 - and the 'periodic register update' visible when watching RAM. [confirmed by emulation]

@@ -822,7 +822,7 @@
     RETN            # 0b:2a (0b:34) 0f  -  return from CALL (pop the saved address)
     LDP    5        # 0b:2b (0b:29) 1a  -  page-buffer = 5 (arm the next branch/call to page 5)
     BR     02       # 0b:2c (0b:12) 83  -  if status: branch to 02
-    LDX    5        # 0b:2d (0b:24) 2d  -  X = 5 (select RAM file 5)
+    LDX    5        # 0b:2d (0b:24) 2d  -  Increments the free-running RND counter M(5,d):M(5,e):M(5,f) once per idle pass (reached from the idle loop ~05:31). This counter is the entropy source RND (1e:12) copies into R13:R14:R15 - and the 'periodic register update' visible when watching RAM. [confirmed by emulation]
     TCY    d        # 0b:2e (0b:08) 4b  -  Y = d
     IMAC            # 0b:2f (0b:11) 3e  -  A = M(X,Y) + 1 (status = carry)
     BR     33       # 0b:30 (0b:22) 93  -  if status: branch to 33

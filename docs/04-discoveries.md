@@ -24,10 +24,12 @@ stands on that work. To keep the record honest:
   handler; the "all the hard maths is counting" structure; `RND`'s entropy from the
   free‑running idle counter; `RND` writing three registers; and the hidden extended
   register bank (RAM file 6).
-- **Candidates still to verify:** exactly why `RND` fills three registers, and the
-  purpose of the periodic register updates — the latter most likely tied to the
-  software timekeeping behind the Show/Set‑Time built‑ins (see the roadmap at the
-  end).
+- **Verified by running the ROM (these were candidates):** `RND` fills three registers
+  because it copies a **three‑nibble free‑running counter** `M(5,d):M(5,e):M(5,f)` straight
+  into `R13:R14:R15`; that counter *is* the "periodic register update" — it is bumped every
+  idle pass (at `0b:2d`), so `RND`'s value is just wherever it happens to be when you fire it
+  (key‑press timing as entropy). My earlier guess that the periodic updates were the
+  timekeeping was wrong.
 
 ## The genuinely clever
 
@@ -139,15 +141,25 @@ had to be run back through the LFSR to be understood.
 
 **`RND` writes *three* registers, not one.** I expected `RND` to drop a random
 nibble into one register. Instead it fills `R13`, `R14`, `R15` — three of them.
-That surprised me in the disassembly (why copy three values?) until the emulator's
-documented behaviour confirmed it. The converters `HXDZ`/`DZHX` use the same three
-registers as their working number.
+Running the ROM shows why: `RND` copies a **three‑nibble free‑running counter**
+(`M(5,d):M(5,e):M(5,f)`, bumped every idle pass at `0b:2d`) straight into `R13:R14:R15`, so
+the "random" value is simply wherever that counter sits when you fire `RND` — human reaction
+time as the entropy source. The converters `HXDZ`/`DZHX` then reuse those same three registers
+as their working number.
 
 **There's a second, hidden register bank.** `MULT` and `DIV` need two operands, but
 there are only sixteen visible registers. The second operand lives in an
 *extended* register file — a whole separate bank of sixteen shadow registers
 (RAM file 6) that no ordinary opcode touches. It doesn't appear in the manual's
 register model at all; you only find it by watching `MULT` reach for it.
+
+**A single‑step debugger, reusing the interpreter.** The command keys include `STEP` and
+`BKP` — a real single‑step + breakpoint debugger on a 1981 trainer — and neither needs its
+own machinery. `STEP` just lets the interpreter run **one** instruction (a single pass through
+the execute path at `08:02`, which advances the PC `M(2,4):M(2,5)` by one) and drops back to
+command mode. `BKP` + a two‑digit address stores a breakpoint that `RUN` checks each
+instruction, stopping when the PC matches (`BKP 00` clears it). The debugger is almost entirely
+the interpreter it debugs, run one step at a time. Verified by running both in the emulator.
 
 **The user's memory fits the chip exactly.** External program RAM is a 2114:
 1024 nibbles. The interpreter stores each instruction in a four‑nibble slot
