@@ -3557,7 +3557,7 @@
 # -----------------------------------------------------------------------------
 # Page 33
 
-    # === PGM 0 = SELF-TEST handler (VERIFIED by emulation). Lamp + display test: drives all four DOT output LEDs (R7-R10) high, cycles test patterns onto the display (reusing the show-time/display path at page 27), and exercises I/O; loops. Verified: press PGM then 0 -> page 33 runs heavily and R7-R10 all go high. Works with page 31. ===
+    # === PGM 0 = SELF-TEST handler (VERIFIED by emulation; behaviour per Michael Wessel). A full hardware self-test: tests the display; tests the keyboard (each key in turn); tests the data path output->input by driving the four DOT outputs (R7-R10) and reading them back on the DIN inputs (requires cables wiring DOT->DIN); plus some internal tests. Cycles patterns onto the display (reusing the page-27 display path). Verified: press PGM then 0 -> page 33 runs heavily and R7-R10 all go high (the DOT->DIN drive). Works with page 31. ===
     TCY    1        # 33:00 (33:00) 48  -  Y = 1
     TMA             # 33:01 (33:01) 21  -  A = M(X,Y)
     TCY    0        # 33:02 (33:03) 40  -  Y = 0
