@@ -139,11 +139,20 @@ level is the same `ACxAC` ladder. Elegant in isolation, a maze in aggregate.
 
 ## The overall impression
 
-What comes through, after all of it, is **craftsmanship under constraint.** Four
-kilobytes, a 4‑bit ALU, a handful of I/O pins, no multiplier, no stack to speak
-of, a program counter that scrambles its own addresses — and out of that, a
-friendly little computer with sixteen registers, a hex keypad, a six‑digit
-display, arithmetic, subroutines, a cassette interface, and a built‑in game. There
-is almost no waste in this ROM. Nearly every clever thing here exists because the
-budget forced it, and forty‑five years later the cleverness still reads as
-cleverness. It was a privilege to take it apart.
+What comes through, after all of it, is **craftsmanship under constraint — with
+rough edges.** Four kilobytes, a 4‑bit ALU, a handful of I/O pins, no multiplier,
+no stack to speak of, a program counter that scrambles its own addresses — and out
+of that, a friendly little computer with sixteen registers, a hex keypad, a
+six‑digit display, arithmetic, subroutines, a cassette interface, and a built‑in
+game. The instruction‑set design — a whole virtual machine in that space — is the
+genuinely clever part.
+
+The plumbing beneath it is rougher, and it is worth being honest about. As Jason
+T. Jacques' timing analysis shows, the SRAM read delay is orders of magnitude
+longer than the 2114 chips need — nearly half the machine's running time is spent
+waiting on memory that could answer far sooner. And the data inversion on every
+read is done bit‑by‑bit, where the TMS's complement instruction (two's‑complement,
+then subtract one — two instructions) would have done it, or a non‑inverting buffer
+would have removed the need entirely. Elegant design, over‑built access path: the
+hardware and firmware engineers were clearly still learning as they went. It was a
+privilege to take apart either way.

@@ -690,8 +690,8 @@ and traced above. What began as 4,096 scrambled bytes is a legible little
 computer.
 
 For a step back from the machine itself — what it means that this reconstruction
-was done by a frontier model in an afternoon — see
-[doc 03, *Reflections*](03-reflections.md).
+was done by a frontier model in an afternoon, building on the recovered dump and
+Jason's emulator and write‑up — see [doc 03, *Reflections*](03-reflections.md).
 
 ## 4. Display, keypad, SRAM, and the F‑operations *(pending)*
 

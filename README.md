@@ -83,9 +83,10 @@ untouched source.
   each built‑in `F` operation and `PGM` program is implemented. A complete
   §1–§10 theory of operation.
 - [`docs/03-reflections.md`](docs/03-reflections.md) — a short essay: what it
-  means that a frontier model reverse‑engineered this firmware in an afternoon —
-  the human feat of the ROM dump, why traditional tools struggle with the
-  TMS1000 family, and the dual‑use implications for firmware security.
+  means that a frontier model reconstructed this firmware in an afternoon —
+  building on the recovered dump, Jason's emulator, and his write‑up — plus why
+  traditional tools struggle with the TMS1000 family, and the dual‑use
+  implications for firmware security.
 - [`docs/04-discoveries.md`](docs/04-discoveries.md) — the fun part: the
   cleverest, strangest, and most tedious things found in the firmware — the
   font‑in‑silicon display, `HALT`‑is‑just‑a‑jump, maths by counting, the demo

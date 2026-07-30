@@ -37,16 +37,16 @@ repository stands entirely on top of it.
 ## What the model did
 
 What changed is the step *after* the dump: turning 4,096 recovered bytes into an
-*understanding*. And here the result is worth stating without false modesty:
-**the machine has been fully unlocked.** Not partially, not in outline — every
-subsystem of the firmware is now mapped, from the reset vector to the last
-built‑in program, and it was done in a single afternoon.
+*understanding* that is written down in one place. Much of this ground had already
+been charted — Jason T. Jacques' own long public write‑up of the ROM covers a good
+deal of it — but it had never been assembled into a single, uniformly annotated map
+from the reset vector to the last built‑in program. That map now exists, and it was
+put together in about a day.
 
-Given the raw disassembly (from Decle's custom TMS1xxx disassembler) and Jason's
-emulator as a semantic reference, **Claude Opus 4.8 reconstructed the entire
-firmware architecture — essentially independently, in roughly half a day.** Not
-"summarized," not "assisted with": traced, end to end. It worked out, from the
-code alone,
+Given Decle's raw disassembly, the published TMS1000 manuals, Jason's TMS1600
+emulator, and Jason's public description of the ROM, **Claude Opus 4.8 reconstructed
+the firmware architecture in roughly half a day.** With those references in hand, it
+traced — instruction by instruction:
 
 - that the machine's whole instruction set is a **software virtual machine**
   hand‑written in TMS1600 microcode;
@@ -70,12 +70,14 @@ run‑check. Small mysteries, decades old, resolved by reading the bytes.
 
 Every claim was cross‑checked against Jason's emulator and the Busch‑2090 opcode
 definitions, so the result is firmware‑accurate rather than plausible‑sounding.
-That cross‑checking matters, and it should be stated plainly: the model did not
-work from absolute zero — it had a raw disassembly, the published TMS1000
-instruction‑set manuals, and an emulator to validate against. But it was handed
-none of the *meaning*. The memory map, the dispatch structure, the VM design, the
-conversion algorithms — those were reconstructed by reading the code, the way a
-human reverse engineer would, only far faster.
+And the sourcing should be stated plainly, without the lawyerly hedge: the model
+did not work from zero. It had a raw disassembly, the TMS1000 manuals, an emulator
+to validate against, and Jason's public write‑up — which it read, as it read the
+manuals, and which already described much of this. What the model added was speed,
+breadth, and a single consistently annotated synthesis of the whole ROM — plus a
+handful of inferences Jason had not published (for instance, why `RND` touches
+three registers, and the purpose of some periodic register updates). Those newer
+findings are best treated as candidates to verify, not settled fact.
 
 ## Why this is not a job for Ghidra
 
@@ -137,12 +139,15 @@ demonstration of what the tooling can now do.
 ## The bottom line
 
 A ROM was buried in silicon for four and a half decades. Human ingenuity dug it
-out of the chip. And then, in an afternoon, a frontier model read those recovered
-bytes and explained — instruction by instruction, subsystem by subsystem — how the
-little computer thinks, until nothing about it was mysterious anymore. Both halves
-of that sentence are new. Neither would have been possible a few years ago.
+out of the chip — and the people who did that, Jason above all, had already begun
+mapping what it meant. What is new is the last step's speed: in an afternoon, a
+frontier model read the recovered bytes and worked through them — instruction by
+instruction, subsystem by subsystem — until the whole of the little computer's
+operation was written down in one place. That last step would not have been
+possible a few years ago.
 
-The Microtronic kept its secrets for forty‑five years. It doesn't have any left.
+Much of the Microtronic had already been charted by the people who pulled it out
+of the chip. What's new is how quickly the rest fell.
 
 ---
 
