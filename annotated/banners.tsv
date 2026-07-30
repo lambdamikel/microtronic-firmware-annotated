@@ -75,3 +75,22 @@
 3d:00	PGM 7 (Nim) bytecode, continued (data; see the 3a banner).
 3e:00	PGM 7 (Nim) bytecode, continued (data; see the 3a banner).
 3f:00	PGM 7 (Nim) bytecode, continued + trailing 0x00 fill (see the 3a banner).
+
+# ----- role banners for the remaining gloss-only pages (MULT/DIV inner loops confirmed by emulation; command/self-test helpers inferred from code + position) -----
+2c:00	MULT helper: part of the repeated-decimal-addition multiply loop (works with the MULT/DIV routine on 2b). [confirmed by emulation - fires during a 999x999 multiply]
+2d:00	MULT helper: inner step of the repeated-addition multiply (with 2b). [confirmed by emulation - fires during multiply]
+2e:00	DIV helper: inner step of the repeated-subtraction divide (with 2b). [confirmed by emulation - fires during divide]
+21:00	RUN/HALT-mode control: tests and clears the 'execute this pass' flag M(0,8).3 (RBIT 3 = stop running), then dispatches - part of run / single-step control. [role from code; not dynamically reached]
+25:00	Register read/write helper: moves values in/out of the user registers (file 7, e.g. R14/R15) - the REG *modify* path (enter register #, then value). [role from code]
+2a:00	MULT/DIV setup helper: clears a result/register file (CALL 00:06) and seeds M(4,d); works with the multiply/divide routine on 2b. [role from code + position]
+2f:00	MULT/DIV arithmetic helper: adds/subtracts using the extended operand bank (file 6) and file 5 - the add/subtract core of multiply/divide. [role from code]
+35:00	PGM 0 self-test - KEYBOARD sub-test: calls the keypad scan (01:00) to test each key in turn, tracking state. [role from code; the self-test's per-key stage]
+36:00	PGM 0 self-test - DISPLAY sub-test: calls the display-staging helper (13:00) to put test patterns on the LED, stepping a counter. [role from code]
+02:00	Command-mode state helper (near boot/command pages 00/01/03/05-07): tests state and dispatches. [role inferred from code + position; not dynamically reached]
+04:00	Command-mode dispatch helper: tests a flag bit and branches to sub-handlers (2f/3c); works with the command state machine (03/05-07). [inferred from code]
+22:00	Display/format helper (near the REG display path on 20): copies fields, does a little arithmetic, returns via the carry helper 1b. [inferred from code]
+24:00	Mode dispatcher: tests bit 0 of M(?,0/1/2) in turn and routes to the time UI (27), MULT/DIV helpers (2a/2d), etc. [inferred from code]
+26:00	Command-mode setup: clears a cell and sets mode/state flag bits - initialisation for a command. [inferred from code]
+34:00	Init helper: clears a RAM file (CALL 00:06) and seeds file 2; used around the self-test / save setup (pages 33/35-38). [inferred from code]
+37:00	Self-test / display helper: arithmetic on the file-3 display buffer plus display-staging (13:00) - a self-test display-pattern step. [inferred from code]
+39:00	Setup/init helper near the cassette SAVE (38): seeds M(2,c:d) and dispatches; likely a save/self-test setup step. [inferred from code]

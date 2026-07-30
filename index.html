@@ -205,7 +205,9 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <a href="#L001a" class="navrt"><span class="navaddr">00:1a</span>Boot: run two init subroutines, then enter t…</a>
 <a href="#L0020" class="navrt"><span class="navaddr">00:20</span>Keypad / input handling</a>
 <a href="#L0100" class="navrt"><span class="navaddr">01:00</span>KEYPAD MATRIX SCAN</a>
+<a href="#L0200" class="navrt"><span class="navaddr">02:00</span>Command-mode state helper</a>
 <a href="#L0300" class="navrt"><span class="navaddr">03:00</span>Part of the REG command: shows a register&#x27;s …</a>
+<a href="#L0400" class="navrt"><span class="navaddr">04:00</span>Command-mode dispatch helper: tests a flag b…</a>
 <a href="#L0500" class="navrt"><span class="navaddr">05:00</span>Halted-mode command handling</a>
 <a href="#L0600" class="navrt"><span class="navaddr">06:00</span>Command-mode state machine</a>
 <a href="#L0700" class="navrt"><span class="navaddr">07:00</span>Command-mode state machine, continued</a>
@@ -235,16 +237,31 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <a href="#L1d00" class="navrt"><span class="navaddr">1d:00</span>HXDZ</a>
 <a href="#L1f00" class="navrt"><span class="navaddr">1f:00</span>R13:R14:R15 staging helper</a>
 <a href="#L2000" class="navrt"><span class="navaddr">20:00</span>Shared display/format helper, reached by the…</a>
+<a href="#L2100" class="navrt"><span class="navaddr">21:00</span>RUN/HALT-mode control: tests and clears the …</a>
+<a href="#L2200" class="navrt"><span class="navaddr">22:00</span>Display/format helper</a>
 <a href="#L2300" class="navrt"><span class="navaddr">23:00</span>PGM 1 = CASSETTE LOAD</a>
+<a href="#L2400" class="navrt"><span class="navaddr">24:00</span>Mode dispatcher: tests bit 0 of M</a>
+<a href="#L2500" class="navrt"><span class="navaddr">25:00</span>Register read/write helper: moves values in/…</a>
+<a href="#L2600" class="navrt"><span class="navaddr">26:00</span>Command-mode setup: clears a cell and sets m…</a>
 <a href="#L2700" class="navrt"><span class="navaddr">27:00</span>PGM 3</a>
 <a href="#L2800" class="navrt"><span class="navaddr">28:00</span>1Hz CLOCK ADVANCE = background timekeeping</a>
 <a href="#L2904" class="navrt"><span class="navaddr">29:04</span>F0x EXTENDED-OP DISPATCH</a>
+<a href="#L2a00" class="navrt"><span class="navaddr">2a:00</span>MULT/DIV setup helper: clears a result/regis…</a>
 <a href="#L2b00" class="navrt"><span class="navaddr">2b:00</span>MULT</a>
+<a href="#L2c00" class="navrt"><span class="navaddr">2c:00</span>MULT helper: part of the repeated-decimal-ad…</a>
+<a href="#L2d00" class="navrt"><span class="navaddr">2d:00</span>MULT helper: inner step of the repeated-addi…</a>
+<a href="#L2e00" class="navrt"><span class="navaddr">2e:00</span>DIV helper: inner step of the repeated-subtr…</a>
+<a href="#L2f00" class="navrt"><span class="navaddr">2f:00</span>MULT/DIV arithmetic helper: adds/subtracts u…</a>
 <a href="#L3000" class="navrt"><span class="navaddr">30:00</span>PGM 5</a>
 <a href="#L3100" class="navrt"><span class="navaddr">31:00</span>PGM 0 Self-Test helper</a>
 <a href="#L3200" class="navrt"><span class="navaddr">32:00</span>PGM 0 Self-Test helper</a>
 <a href="#L3300" class="navrt"><span class="navaddr">33:00</span>PGM 0 = SELF-TEST handler</a>
+<a href="#L3400" class="navrt"><span class="navaddr">34:00</span>Init helper: clears a RAM file</a>
+<a href="#L3500" class="navrt"><span class="navaddr">35:00</span>PGM 0 self-test - KEYBOARD sub-test: calls t…</a>
+<a href="#L3600" class="navrt"><span class="navaddr">36:00</span>PGM 0 self-test - DISPLAY sub-test: calls th…</a>
+<a href="#L3700" class="navrt"><span class="navaddr">37:00</span>Self-test / display helper: arithmetic on th…</a>
 <a href="#L3800" class="navrt"><span class="navaddr">38:00</span>PGM 2 = CASSETTE SAVE</a>
+<a href="#L3900" class="navrt"><span class="navaddr">39:00</span>Setup/init helper near the cassette SAVE</a>
 <a href="#L3a00" class="navrt"><span class="navaddr">3a:00</span>PGM 7 = the NIM GAME</a>
 <a href="#L3c00" class="navrt"><span class="navaddr">3c:00</span>PGM 7</a>
 <a href="#L3d00" class="navrt"><span class="navaddr">3d:00</span>PGM 7</a>
@@ -392,6 +409,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L013f" data-a="0" data-s="01:3f br 0a if status: branch to 0a"><a class="addr" href="#L013f">01:3f</a><span class="hex">b7</span><span class="flow">BR</span><span class="op">0a</span><span class="cm gloss">if status: branch to 0a</span></div>
 </section>
 <section class="page"><h2 id="P02">Page 02<span class="cp">chapter 0 · page 2</span></h2>
+<div class="banner">Command-mode state helper (near boot/command pages 00/01/03/05-07): tests state and dispatches. [role inferred from code + position; not dynamically reached]</div>
 <div class="row" id="L0200" data-a="0" data-s="02:00 ldp 0 page-buffer = 0 (arm the next branch/call to page 0)"><a class="addr" href="#L0200">02:00</a><span class="hex">10</span><span class="flow">LDP</span><span class="op">0</span><span class="cm gloss">page-buffer = 0 (arm the next branch/call to page 0)</span></div>
 <div class="row" id="L0201" data-a="0" data-s="02:01 br 00 if status: branch to 00"><a class="addr" href="#L0201">02:01</a><span class="hex">80</span><span class="flow">BR</span><span class="op">00</span><span class="cm gloss">if status: branch to 00</span></div>
 <div class="row" id="L0202" data-a="0" data-s="02:02 tcy e y = e"><a class="addr" href="#L0202">02:02</a><span class="hex">47</span><span class="mn">TCY</span><span class="op">e</span><span class="cm gloss">Y = e</span></div>
@@ -525,6 +543,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L033f" data-a="0" data-s="03:3f mnea  (unused — 0x00 fill)"><a class="addr" href="#L033f">03:3f</a><span class="hex">00</span><span class="pad">MNEA</span><span class="cm gloss">(unused — 0x00 fill)</span></div>
 </section>
 <section class="page"><h2 id="P04">Page 04<span class="cp">chapter 0 · page 4</span></h2>
+<div class="banner">Command-mode dispatch helper: tests a flag bit and branches to sub-handlers (2f/3c); works with the command state machine (03/05-07). [inferred from code]</div>
 <div class="row" id="L0400" data-a="0" data-s="04:00 ldp 0 page-buffer = 0 (arm the next branch/call to page 0)"><a class="addr" href="#L0400">04:00</a><span class="hex">10</span><span class="flow">LDP</span><span class="op">0</span><span class="cm gloss">page-buffer = 0 (arm the next branch/call to page 0)</span></div>
 <div class="row" id="L0401" data-a="0" data-s="04:01 br 00 if status: branch to 00"><a class="addr" href="#L0401">04:01</a><span class="hex">80</span><span class="flow">BR</span><span class="op">00</span><span class="cm gloss">if status: branch to 00</span></div>
 <div class="row" id="L0402" data-a="0" data-s="04:02 tcy d y = d"><a class="addr" href="#L0402">04:02</a><span class="hex">4b</span><span class="mn">TCY</span><span class="op">d</span><span class="cm gloss">Y = d</span></div>
@@ -2468,6 +2487,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L203f" data-a="0" data-s="20:3f br 16 if status: branch to 16"><a class="addr" href="#L203f">20:3f</a><span class="hex">96</span><span class="flow">BR</span><span class="op">16</span><span class="cm gloss">if status: branch to 16</span></div>
 </section>
 <section class="page"><h2 id="P21">Page 21<span class="cp">chapter 2 · page 1</span></h2>
+<div class="banner">RUN/HALT-mode control: tests and clears the &#x27;execute this pass&#x27; flag M(0,8).3 (RBIT 3 = stop running), then dispatches - part of run / single-step control. [role from code; not dynamically reached]</div>
 <div class="row" id="L2100" data-a="0" data-s="21:00 ldx 0 x = 0 (select ram file 0)"><a class="addr" href="#L2100">21:00</a><span class="hex">28</span><span class="mn">LDX</span><span class="op">0</span><span class="cm gloss">X = 0 (select RAM file 0)</span></div>
 <div class="row" id="L2101" data-a="0" data-s="21:01 tcy 8 y = 8"><a class="addr" href="#L2101">21:01</a><span class="hex">41</span><span class="mn">TCY</span><span class="op">8</span><span class="cm gloss">Y = 8</span></div>
 <div class="row" id="L2102" data-a="0" data-s="21:02 tbit 1 status = bit 1 of m(x,y)"><a class="addr" href="#L2102">21:02</a><span class="hex">3a</span><span class="test">TBIT</span><span class="op">1</span><span class="cm gloss">status = bit 1 of M(X,Y)</span></div>
@@ -2534,6 +2554,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L213f" data-a="0" data-s="21:3f br 2b if status: branch to 2b"><a class="addr" href="#L213f">21:3f</a><span class="hex">a9</span><span class="flow">BR</span><span class="op">2b</span><span class="cm gloss">if status: branch to 2b</span></div>
 </section>
 <section class="page"><h2 id="P22">Page 22<span class="cp">chapter 2 · page 2</span></h2>
+<div class="banner">Display/format helper (near the REG display path on 20): copies fields, does a little arithmetic, returns via the carry helper 1b. [inferred from code]</div>
 <div class="row" id="L2200" data-a="0" data-s="22:00 tcy 6 y = 6"><a class="addr" href="#L2200">22:00</a><span class="hex">46</span><span class="mn">TCY</span><span class="op">6</span><span class="cm gloss">Y = 6</span></div>
 <div class="row" id="L2201" data-a="0" data-s="22:01 tmy  y = m(x,y)"><a class="addr" href="#L2201">22:01</a><span class="hex">22</span><span class="mn">TMY</span><span class="cm gloss">Y = M(X,Y)</span></div>
 <div class="row" id="L2202" data-a="0" data-s="22:02 ynec 1 status = (y != 1)"><a class="addr" href="#L2202">22:02</a><span class="hex">58</span><span class="test">YNEC</span><span class="op">1</span><span class="cm gloss">status = (Y != 1)</span></div>
@@ -2667,6 +2688,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L233f" data-a="0" data-s="23:3f retn  return from call (pop the saved address)"><a class="addr" href="#L233f">23:3f</a><span class="hex">0f</span><span class="flow">RETN</span><span class="cm gloss">return from CALL (pop the saved address)</span></div>
 </section>
 <section class="page"><h2 id="P24">Page 24<span class="cp">chapter 2 · page 4</span></h2>
+<div class="banner">Mode dispatcher: tests bit 0 of M(?,0/1/2) in turn and routes to the time UI (27), MULT/DIV helpers (2a/2d), etc. [inferred from code]</div>
 <div class="row" id="L2400" data-a="0" data-s="24:00 tcy 0 y = 0"><a class="addr" href="#L2400">24:00</a><span class="hex">40</span><span class="mn">TCY</span><span class="op">0</span><span class="cm gloss">Y = 0</span></div>
 <div class="row" id="L2401" data-a="0" data-s="24:01 tbit 0 status = bit 0 of m(x,y)"><a class="addr" href="#L2401">24:01</a><span class="hex">38</span><span class="test">TBIT</span><span class="op">0</span><span class="cm gloss">status = bit 0 of M(X,Y)</span></div>
 <div class="row" id="L2402" data-a="0" data-s="24:02 br 27 if status: branch to 27"><a class="addr" href="#L2402">24:02</a><span class="hex">b6</span><span class="flow">BR</span><span class="op">27</span><span class="cm gloss">if status: branch to 27</span></div>
@@ -2733,6 +2755,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L243f" data-a="0" data-s="24:3f br 23 if status: branch to 23"><a class="addr" href="#L243f">24:3f</a><span class="hex">a3</span><span class="flow">BR</span><span class="op">23</span><span class="cm gloss">if status: branch to 23</span></div>
 </section>
 <section class="page"><h2 id="P25">Page 25<span class="cp">chapter 2 · page 5</span></h2>
+<div class="banner">Register read/write helper: moves values in/out of the user registers (file 7, e.g. R14/R15) - the REG *modify* path (enter register #, then value). [role from code]</div>
 <div class="row" id="L2500" data-a="0" data-s="25:00 ldx 7 x = 7 (select ram file 7)"><a class="addr" href="#L2500">25:00</a><span class="hex">2f</span><span class="mn">LDX</span><span class="op">7</span><span class="cm gloss">X = 7 (select RAM file 7)</span></div>
 <div class="row" id="L2501" data-a="0" data-s="25:01 tcy e y = e"><a class="addr" href="#L2501">25:01</a><span class="hex">47</span><span class="mn">TCY</span><span class="op">e</span><span class="cm gloss">Y = e</span></div>
 <div class="row" id="L2502" data-a="0" data-s="25:02 tmy  y = m(x,y)"><a class="addr" href="#L2502">25:02</a><span class="hex">22</span><span class="mn">TMY</span><span class="cm gloss">Y = M(X,Y)</span></div>
@@ -2799,6 +2822,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L253f" data-a="0" data-s="25:3f mnea  (unused — 0x00 fill)"><a class="addr" href="#L253f">25:3f</a><span class="hex">00</span><span class="pad">MNEA</span><span class="cm gloss">(unused — 0x00 fill)</span></div>
 </section>
 <section class="page"><h2 id="P26">Page 26<span class="cp">chapter 2 · page 6</span></h2>
+<div class="banner">Command-mode setup: clears a cell and sets mode/state flag bits - initialisation for a command. [inferred from code]</div>
 <div class="row" id="L2600" data-a="0" data-s="26:00 tcy c y = c"><a class="addr" href="#L2600">26:00</a><span class="hex">43</span><span class="mn">TCY</span><span class="op">c</span><span class="cm gloss">Y = c</span></div>
 <div class="row" id="L2601" data-a="0" data-s="26:01 cla  a = 0"><a class="addr" href="#L2601">26:01</a><span class="hex">7f</span><span class="mn">CLA</span><span class="cm gloss">A = 0</span></div>
 <div class="row" id="L2602" data-a="0" data-s="26:02 tam  m(x,y) = a"><a class="addr" href="#L2602">26:02</a><span class="hex">27</span><span class="mn">TAM</span><span class="cm gloss">M(X,Y) = A</span></div>
@@ -3066,6 +3090,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L293f" data-a="0" data-s="29:3f br 00 if status: branch to 00"><a class="addr" href="#L293f">29:3f</a><span class="hex">80</span><span class="flow">BR</span><span class="op">00</span><span class="cm gloss">if status: branch to 00</span></div>
 </section>
 <section class="page"><h2 id="P2a">Page 2a<span class="cp">chapter 2 · page a</span></h2>
+<div class="banner">MULT/DIV setup helper: clears a result/register file (CALL <a class="xref" href="#L0006">00:06</a>) and seeds M(4,d); works with the multiply/divide routine on 2b. [role from code + position]</div>
 <div class="row" id="L2a00" data-a="0" data-s="2a:00 ldx 7 x = 7 (select ram file 7)"><a class="addr" href="#L2a00">2a:00</a><span class="hex">2f</span><span class="mn">LDX</span><span class="op">7</span><span class="cm gloss">X = 7 (select RAM file 7)</span></div>
 <div class="row" id="L2a01" data-a="0" data-s="2a:01 ldp 0 page-buffer = 0 (arm the next branch/call to page 0)"><a class="addr" href="#L2a01">2a:01</a><span class="hex">10</span><span class="flow">LDP</span><span class="op">0</span><span class="cm gloss">page-buffer = 0 (arm the next branch/call to page 0)</span></div>
 <div class="row" id="L2a02" data-a="0" data-s="2a:02 tpc  chapter-buffer = page-buffer (arm the next branch/call&#x27;s chapter)"><a class="addr" href="#L2a02">2a:02</a><span class="hex">0b</span><span class="flow">TPC</span><span class="cm gloss">chapter-buffer = page-buffer (arm the next branch/call&#x27;s chapter)</span></div>
@@ -3199,6 +3224,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L2b3f" data-a="0" data-s="2b:3f mnea  (unused — 0x00 fill)"><a class="addr" href="#L2b3f">2b:3f</a><span class="hex">00</span><span class="pad">MNEA</span><span class="cm gloss">(unused — 0x00 fill)</span></div>
 </section>
 <section class="page"><h2 id="P2c">Page 2c<span class="cp">chapter 2 · page c</span></h2>
+<div class="banner">MULT helper: part of the repeated-decimal-addition multiply loop (works with the MULT/DIV routine on 2b). [confirmed by emulation - fires during a 999x999 multiply]</div>
 <div class="row" id="L2c00" data-a="0" data-s="2c:00 ldx 5 x = 5 (select ram file 5)"><a class="addr" href="#L2c00">2c:00</a><span class="hex">2d</span><span class="mn">LDX</span><span class="op">5</span><span class="cm gloss">X = 5 (select RAM file 5)</span></div>
 <div class="row" id="L2c01" data-a="0" data-s="2c:01 tcy 6 y = 6"><a class="addr" href="#L2c01">2c:01</a><span class="hex">46</span><span class="mn">TCY</span><span class="op">6</span><span class="cm gloss">Y = 6</span></div>
 <div class="row" id="L2c02" data-a="0" data-s="2c:02 tcmiy 0 m(x,y) = 0; y = y + 1"><a class="addr" href="#L2c02">2c:02</a><span class="hex">60</span><span class="mn">TCMIY</span><span class="op">0</span><span class="cm gloss">M(X,Y) = 0; Y = Y + 1</span></div>
@@ -3265,6 +3291,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L2c3f" data-a="0" data-s="2c:3f mnea  (unused — 0x00 fill)"><a class="addr" href="#L2c3f">2c:3f</a><span class="hex">00</span><span class="pad">MNEA</span><span class="cm gloss">(unused — 0x00 fill)</span></div>
 </section>
 <section class="page"><h2 id="P2d">Page 2d<span class="cp">chapter 2 · page d</span></h2>
+<div class="banner">MULT helper: inner step of the repeated-addition multiply (with 2b). [confirmed by emulation - fires during multiply]</div>
 <div class="row" id="L2d00" data-a="0" data-s="2d:00 tcy c y = c"><a class="addr" href="#L2d00">2d:00</a><span class="hex">43</span><span class="mn">TCY</span><span class="op">c</span><span class="cm gloss">Y = c</span></div>
 <div class="row" id="L2d01" data-a="0" data-s="2d:01 tma  a = m(x,y)"><a class="addr" href="#L2d01">2d:01</a><span class="hex">21</span><span class="mn">TMA</span><span class="cm gloss">A = M(X,Y)</span></div>
 <div class="row" id="L2d02" data-a="0" data-s="2d:02 acxac 5 a = a + 5 + 1 (status = carry)"><a class="addr" href="#L2d02">2d:02</a><span class="hex">7a</span><span class="mn">ACxAC</span><span class="op">5</span><span class="cm gloss">A = A + 5 + 1 (status = carry)</span></div>
@@ -3331,6 +3358,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L2d3f" data-a="0" data-s="2d:3f mnea  (unused — 0x00 fill)"><a class="addr" href="#L2d3f">2d:3f</a><span class="hex">00</span><span class="pad">MNEA</span><span class="cm gloss">(unused — 0x00 fill)</span></div>
 </section>
 <section class="page"><h2 id="P2e">Page 2e<span class="cp">chapter 2 · page e</span></h2>
+<div class="banner">DIV helper: inner step of the repeated-subtraction divide (with 2b). [confirmed by emulation - fires during divide]</div>
 <div class="row" id="L2e00" data-a="0" data-s="2e:00 ldx 5 x = 5 (select ram file 5)"><a class="addr" href="#L2e00">2e:00</a><span class="hex">2d</span><span class="mn">LDX</span><span class="op">5</span><span class="cm gloss">X = 5 (select RAM file 5)</span></div>
 <div class="row" id="L2e01" data-a="0" data-s="2e:01 tcy f y = f"><a class="addr" href="#L2e01">2e:01</a><span class="hex">4f</span><span class="mn">TCY</span><span class="op">f</span><span class="cm gloss">Y = f</span></div>
 <div class="row" id="L2e02" data-a="0" data-s="2e:02 tcmiy 0 m(x,y) = 0; y = y + 1"><a class="addr" href="#L2e02">2e:02</a><span class="hex">60</span><span class="mn">TCMIY</span><span class="op">0</span><span class="cm gloss">M(X,Y) = 0; Y = Y + 1</span></div>
@@ -3397,6 +3425,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L2e3f" data-a="0" data-s="2e:3f br 00 if status: branch to 00"><a class="addr" href="#L2e3f">2e:3f</a><span class="hex">80</span><span class="flow">BR</span><span class="op">00</span><span class="cm gloss">if status: branch to 00</span></div>
 </section>
 <section class="page"><h2 id="P2f">Page 2f<span class="cp">chapter 2 · page f</span></h2>
+<div class="banner">MULT/DIV arithmetic helper: adds/subtracts using the extended operand bank (file 6) and file 5 - the add/subtract core of multiply/divide. [role from code]</div>
 <div class="row" id="L2f00" data-a="0" data-s="2f:00 tcy 0 y = 0"><a class="addr" href="#L2f00">2f:00</a><span class="hex">40</span><span class="mn">TCY</span><span class="op">0</span><span class="cm gloss">Y = 0</span></div>
 <div class="row" id="L2f01" data-a="0" data-s="2f:01 cla  a = 0"><a class="addr" href="#L2f01">2f:01</a><span class="hex">7f</span><span class="mn">CLA</span><span class="cm gloss">A = 0</span></div>
 <div class="row" id="L2f02" data-a="0" data-s="2f:02 ldx 5 x = 5 (select ram file 5)"><a class="addr" href="#L2f02">2f:02</a><span class="hex">2d</span><span class="mn">LDX</span><span class="op">5</span><span class="cm gloss">X = 5 (select RAM file 5)</span></div>
@@ -3731,6 +3760,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L333f" data-a="0" data-s="33:3f br 39 if status: branch to 39"><a class="addr" href="#L333f">33:3f</a><span class="hex">8a</span><span class="flow">BR</span><span class="op">39</span><span class="cm gloss">if status: branch to 39</span></div>
 </section>
 <section class="page"><h2 id="P34">Page 34<span class="cp">chapter 3 · page 4</span></h2>
+<div class="banner">Init helper: clears a RAM file (CALL <a class="xref" href="#L0006">00:06</a>) and seeds file 2; used around the self-test / save setup (pages 33/35-38). [inferred from code]</div>
 <div class="row" id="L3400" data-a="0" data-s="34:00 ldp 0 page-buffer = 0 (arm the next branch/call to page 0)"><a class="addr" href="#L3400">34:00</a><span class="hex">10</span><span class="flow">LDP</span><span class="op">0</span><span class="cm gloss">page-buffer = 0 (arm the next branch/call to page 0)</span></div>
 <div class="row" id="L3401" data-a="0" data-s="34:01 tpc  chapter-buffer = page-buffer (arm the next branch/call&#x27;s chapter)"><a class="addr" href="#L3401">34:01</a><span class="hex">0b</span><span class="flow">TPC</span><span class="cm gloss">chapter-buffer = page-buffer (arm the next branch/call&#x27;s chapter)</span></div>
 <div class="row" id="L3402" data-a="0" data-s="34:02 ldp 0 page-buffer = 0 (arm the next branch/call to page 0)"><a class="addr" href="#L3402">34:02</a><span class="hex">10</span><span class="flow">LDP</span><span class="op">0</span><span class="cm gloss">page-buffer = 0 (arm the next branch/call to page 0)</span></div>
@@ -3797,6 +3827,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L343f" data-a="0" data-s="34:3f br 3d if status: branch to 3d"><a class="addr" href="#L343f">34:3f</a><span class="hex">a8</span><span class="flow">BR</span><span class="op">3d</span><span class="cm gloss">if status: branch to 3d</span></div>
 </section>
 <section class="page"><h2 id="P35">Page 35<span class="cp">chapter 3 · page 5</span></h2>
+<div class="banner">PGM 0 self-test - KEYBOARD sub-test: calls the keypad scan (<a class="xref" href="#L0100">01:00</a>) to test each key in turn, tracking state. [role from code; the self-test&#x27;s per-key stage]</div>
 <div class="row" id="L3500" data-a="0" data-s="35:00 ldp 1 page-buffer = 1 (arm the next branch/call to page 1)"><a class="addr" href="#L3500">35:00</a><span class="hex">18</span><span class="flow">LDP</span><span class="op">1</span><span class="cm gloss">page-buffer = 1 (arm the next branch/call to page 1)</span></div>
 <div class="row" id="L3501" data-a="0" data-s="35:01 call 00 if status: call 00"><a class="addr" href="#L3501">35:01</a><span class="hex">c0</span><span class="flow">CALL</span><span class="op">00</span><span class="cm gloss">if status: call 00</span></div>
 <div class="row" id="L3502" data-a="0" data-s="35:02 tcy 2 y = 2"><a class="addr" href="#L3502">35:02</a><span class="hex">44</span><span class="mn">TCY</span><span class="op">2</span><span class="cm gloss">Y = 2</span></div>
@@ -3863,6 +3894,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L353f" data-a="0" data-s="35:3f mnea  (unused — 0x00 fill)"><a class="addr" href="#L353f">35:3f</a><span class="hex">00</span><span class="pad">MNEA</span><span class="cm gloss">(unused — 0x00 fill)</span></div>
 </section>
 <section class="page"><h2 id="P36">Page 36<span class="cp">chapter 3 · page 6</span></h2>
+<div class="banner">PGM 0 self-test - DISPLAY sub-test: calls the display-staging helper (<a class="xref" href="#L1300">13:00</a>) to put test patterns on the LED, stepping a counter. [role from code]</div>
 <div class="row" id="L3600" data-a="0" data-s="36:00 ldp 0 page-buffer = 0 (arm the next branch/call to page 0)"><a class="addr" href="#L3600">36:00</a><span class="hex">10</span><span class="flow">LDP</span><span class="op">0</span><span class="cm gloss">page-buffer = 0 (arm the next branch/call to page 0)</span></div>
 <div class="row" id="L3601" data-a="0" data-s="36:01 call 13 if status: call 13"><a class="addr" href="#L3601">36:01</a><span class="hex">fa</span><span class="flow">CALL</span><span class="op">13</span><span class="cm gloss">if status: call 13</span></div>
 <div class="row" id="L3602" data-a="0" data-s="36:02 br 0b if status: branch to 0b"><a class="addr" href="#L3602">36:02</a><span class="hex">af</span><span class="flow">BR</span><span class="op">0b</span><span class="cm gloss">if status: branch to 0b</span></div>
@@ -3929,6 +3961,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L363f" data-a="0" data-s="36:3f br 28 if status: branch to 28"><a class="addr" href="#L363f">36:3f</a><span class="hex">ad</span><span class="flow">BR</span><span class="op">28</span><span class="cm gloss">if status: branch to 28</span></div>
 </section>
 <section class="page"><h2 id="P37">Page 37<span class="cp">chapter 3 · page 7</span></h2>
+<div class="banner">Self-test / display helper: arithmetic on the file-3 display buffer plus display-staging (<a class="xref" href="#L1300">13:00</a>) - a self-test display-pattern step. [inferred from code]</div>
 <div class="row" id="L3700" data-a="0" data-s="37:00 ldx 3 x = 3 (select ram file 3)"><a class="addr" href="#L3700">37:00</a><span class="hex">2e</span><span class="mn">LDX</span><span class="op">3</span><span class="cm gloss">X = 3 (select RAM file 3)</span></div>
 <div class="row" id="L3701" data-a="0" data-s="37:01 tcy 3 y = 3"><a class="addr" href="#L3701">37:01</a><span class="hex">4c</span><span class="mn">TCY</span><span class="op">3</span><span class="cm gloss">Y = 3</span></div>
 <div class="row" id="L3702" data-a="0" data-s="37:02 mnez  status = (m(x,y) != 0)"><a class="addr" href="#L3702">37:02</a><span class="hex">3f</span><span class="test">MNEZ</span><span class="cm gloss">status = (M(X,Y) != 0)</span></div>
@@ -4062,6 +4095,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L383f" data-a="0" data-s="38:3f br 15 if status: branch to 15"><a class="addr" href="#L383f">38:3f</a><span class="hex">ab</span><span class="flow">BR</span><span class="op">15</span><span class="cm gloss">if status: branch to 15</span></div>
 </section>
 <section class="page"><h2 id="P39">Page 39<span class="cp">chapter 3 · page 9</span></h2>
+<div class="banner">Setup/init helper near the cassette SAVE (38): seeds M(2,c:d) and dispatches; likely a save/self-test setup step. [inferred from code]</div>
 <div class="row" id="L3900" data-a="0" data-s="39:00 ldx 2 x = 2 (select ram file 2)"><a class="addr" href="#L3900">39:00</a><span class="hex">2a</span><span class="mn">LDX</span><span class="op">2</span><span class="cm gloss">X = 2 (select RAM file 2)</span></div>
 <div class="row" id="L3901" data-a="0" data-s="39:01 tcy c y = c"><a class="addr" href="#L3901">39:01</a><span class="hex">43</span><span class="mn">TCY</span><span class="op">c</span><span class="cm gloss">Y = c</span></div>
 <div class="row" id="L3902" data-a="0" data-s="39:02 tcmiy f m(x,y) = f; y = y + 1"><a class="addr" href="#L3902">39:02</a><span class="hex">6f</span><span class="mn">TCMIY</span><span class="op">f</span><span class="cm gloss">M(X,Y) = f; Y = Y + 1</span></div>

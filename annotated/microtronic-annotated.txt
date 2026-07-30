@@ -146,6 +146,7 @@
 # -----------------------------------------------------------------------------
 # Page 02
 
+    # === Command-mode state helper (near boot/command pages 00/01/03/05-07): tests state and dispatches. [role inferred from code + position; not dynamically reached] ===
     LDP    0        # 02:00 (02:00) 10  -  page-buffer = 0 (arm the next branch/call to page 0)
     BR     00       # 02:01 (02:01) 80  -  if status: branch to 00
     TCY    e        # 02:02 (02:03) 47  -  Y = e
@@ -285,6 +286,7 @@
 # -----------------------------------------------------------------------------
 # Page 04
 
+    # === Command-mode dispatch helper: tests a flag bit and branches to sub-handlers (2f/3c); works with the command state machine (03/05-07). [inferred from code] ===
     LDP    0        # 04:00 (04:00) 10  -  page-buffer = 0 (arm the next branch/call to page 0)
     BR     00       # 04:01 (04:01) 80  -  if status: branch to 00
     TCY    d        # 04:02 (04:03) 4b  -  Y = d
@@ -2315,6 +2317,7 @@
 # -----------------------------------------------------------------------------
 # Page 21
 
+    # === RUN/HALT-mode control: tests and clears the 'execute this pass' flag M(0,8).3 (RBIT 3 = stop running), then dispatches - part of run / single-step control. [role from code; not dynamically reached] ===
     LDX    0        # 21:00 (21:00) 28  -  X = 0 (select RAM file 0)
     TCY    8        # 21:01 (21:01) 41  -  Y = 8
     TBIT   1        # 21:02 (21:03) 3a  -  status = bit 1 of M(X,Y)
@@ -2384,6 +2387,7 @@
 # -----------------------------------------------------------------------------
 # Page 22
 
+    # === Display/format helper (near the REG display path on 20): copies fields, does a little arithmetic, returns via the carry helper 1b. [inferred from code] ===
     TCY    6        # 22:00 (22:00) 46  -  Y = 6
     TMY             # 22:01 (22:01) 22  -  Y = M(X,Y)
     YNEC   1        # 22:02 (22:03) 58  -  status = (Y != 1)
@@ -2523,6 +2527,7 @@
 # -----------------------------------------------------------------------------
 # Page 24
 
+    # === Mode dispatcher: tests bit 0 of M(?,0/1/2) in turn and routes to the time UI (27), MULT/DIV helpers (2a/2d), etc. [inferred from code] ===
     TCY    0        # 24:00 (24:00) 40  -  Y = 0
     TBIT   0        # 24:01 (24:01) 38  -  status = bit 0 of M(X,Y)
     BR     27       # 24:02 (24:03) b6  -  if status: branch to 27
@@ -2592,6 +2597,7 @@
 # -----------------------------------------------------------------------------
 # Page 25
 
+    # === Register read/write helper: moves values in/out of the user registers (file 7, e.g. R14/R15) - the REG *modify* path (enter register #, then value). [role from code] ===
     LDX    7        # 25:00 (25:00) 2f  -  X = 7 (select RAM file 7)
     TCY    e        # 25:01 (25:01) 47  -  Y = e
     TMY             # 25:02 (25:03) 22  -  Y = M(X,Y)
@@ -2661,6 +2667,7 @@
 # -----------------------------------------------------------------------------
 # Page 26
 
+    # === Command-mode setup: clears a cell and sets mode/state flag bits - initialisation for a command. [inferred from code] ===
     TCY    c        # 26:00 (26:00) 43  -  Y = c
     CLA             # 26:01 (26:01) 7f  -  A = 0
     TAM             # 26:02 (26:03) 27  -  M(X,Y) = A
@@ -2940,6 +2947,7 @@
 # -----------------------------------------------------------------------------
 # Page 2a
 
+    # === MULT/DIV setup helper: clears a result/register file (CALL 00:06) and seeds M(4,d); works with the multiply/divide routine on 2b. [role from code + position] ===
     LDX    7        # 2a:00 (2a:00) 2f  -  X = 7 (select RAM file 7)
     LDP    0        # 2a:01 (2a:01) 10  -  page-buffer = 0 (arm the next branch/call to page 0)
     TPC            # 2a:02 (2a:03) 0b  -  chapter-buffer = page-buffer (arm the next branch/call's chapter)
@@ -3079,6 +3087,7 @@
 # -----------------------------------------------------------------------------
 # Page 2c
 
+    # === MULT helper: part of the repeated-decimal-addition multiply loop (works with the MULT/DIV routine on 2b). [confirmed by emulation - fires during a 999x999 multiply] ===
     LDX    5        # 2c:00 (2c:00) 2d  -  X = 5 (select RAM file 5)
     TCY    6        # 2c:01 (2c:01) 46  -  Y = 6
     TCMIY  0        # 2c:02 (2c:03) 60  -  M(X,Y) = 0; Y = Y + 1
@@ -3148,6 +3157,7 @@
 # -----------------------------------------------------------------------------
 # Page 2d
 
+    # === MULT helper: inner step of the repeated-addition multiply (with 2b). [confirmed by emulation - fires during multiply] ===
     TCY    c        # 2d:00 (2d:00) 43  -  Y = c
     TMA             # 2d:01 (2d:01) 21  -  A = M(X,Y)
     ACxAC  5        # 2d:02 (2d:03) 7a  -  A = A + 5 + 1 (status = carry)
@@ -3217,6 +3227,7 @@
 # -----------------------------------------------------------------------------
 # Page 2e
 
+    # === DIV helper: inner step of the repeated-subtraction divide (with 2b). [confirmed by emulation - fires during divide] ===
     LDX    5        # 2e:00 (2e:00) 2d  -  X = 5 (select RAM file 5)
     TCY    f        # 2e:01 (2e:01) 4f  -  Y = f
     TCMIY  0        # 2e:02 (2e:03) 60  -  M(X,Y) = 0; Y = Y + 1
@@ -3286,6 +3297,7 @@
 # -----------------------------------------------------------------------------
 # Page 2f
 
+    # === MULT/DIV arithmetic helper: adds/subtracts using the extended operand bank (file 6) and file 5 - the add/subtract core of multiply/divide. [role from code] ===
     TCY    0        # 2f:00 (2f:00) 40  -  Y = 0
     CLA             # 2f:01 (2f:01) 7f  -  A = 0
     LDX    5        # 2f:02 (2f:03) 2d  -  X = 5 (select RAM file 5)
@@ -3635,6 +3647,7 @@
 # -----------------------------------------------------------------------------
 # Page 34
 
+    # === Init helper: clears a RAM file (CALL 00:06) and seeds file 2; used around the self-test / save setup (pages 33/35-38). [inferred from code] ===
     LDP    0        # 34:00 (34:00) 10  -  page-buffer = 0 (arm the next branch/call to page 0)
     TPC            # 34:01 (34:01) 0b  -  chapter-buffer = page-buffer (arm the next branch/call's chapter)
     LDP    0        # 34:02 (34:03) 10  -  page-buffer = 0 (arm the next branch/call to page 0)
@@ -3704,6 +3717,7 @@
 # -----------------------------------------------------------------------------
 # Page 35
 
+    # === PGM 0 self-test - KEYBOARD sub-test: calls the keypad scan (01:00) to test each key in turn, tracking state. [role from code; the self-test's per-key stage] ===
     LDP    1        # 35:00 (35:00) 18  -  page-buffer = 1 (arm the next branch/call to page 1)
     CALL   00       # 35:01 (35:01) c0  -  if status: call 00
     TCY    2        # 35:02 (35:03) 44  -  Y = 2
@@ -3773,6 +3787,7 @@
 # -----------------------------------------------------------------------------
 # Page 36
 
+    # === PGM 0 self-test - DISPLAY sub-test: calls the display-staging helper (13:00) to put test patterns on the LED, stepping a counter. [role from code] ===
     LDP    0        # 36:00 (36:00) 10  -  page-buffer = 0 (arm the next branch/call to page 0)
     CALL   13       # 36:01 (36:01) fa  -  if status: call 13
     BR     0b       # 36:02 (36:03) af  -  if status: branch to 0b
@@ -3842,6 +3857,7 @@
 # -----------------------------------------------------------------------------
 # Page 37
 
+    # === Self-test / display helper: arithmetic on the file-3 display buffer plus display-staging (13:00) - a self-test display-pattern step. [inferred from code] ===
     LDX    3        # 37:00 (37:00) 2e  -  X = 3 (select RAM file 3)
     TCY    3        # 37:01 (37:01) 4c  -  Y = 3
     MNEZ            # 37:02 (37:03) 3f  -  status = (M(X,Y) != 0)
@@ -3981,6 +3997,7 @@
 # -----------------------------------------------------------------------------
 # Page 39
 
+    # === Setup/init helper near the cassette SAVE (38): seeds M(2,c:d) and dispatches; likely a save/self-test setup step. [inferred from code] ===
     LDX    2        # 39:00 (39:00) 2a  -  X = 2 (select RAM file 2)
     TCY    c        # 39:01 (39:01) 43  -  Y = c
     TCMIY  f        # 39:02 (39:03) 6f  -  M(X,Y) = f; Y = Y + 1
