@@ -33,6 +33,7 @@
 09:23	Helper: one's-complement a nibble (used to invert SRAM data on read; also a general NOT).
 # ---- Page 0c: external 2114 SRAM write ----
 0c:02	EXTERNAL 2114 SRAM WRITE (mirror of the 09:02 read): address via 0b:20, the 3 data nibbles driven onto R7..R10, each latched by an R13 write strobe. Used by keypad program entry and the PGM loaders.
+05:00	Halted-mode command handling (part of the PGM command path; partially traced). A subroutine here (RETN at 05:15) drives output lines R14/R15 from flag bits in M(4,d); from 05:16 it tests state bits in file 4 and branches to several command-handler pages (1/6/7/8/b/d at :02) -- the routing that sends a PGM digit to its handler. Exact per-command mapping still being traced.
 # ---- Page 0d: 7-segment display refresh ----
 0d:00	7-SEGMENT DISPLAY REFRESH. Multiplexes the six digits: for each, TDO drives the segments (the hardware OPLA decodes the nibble to a 7-seg pattern) and SETR strobes that digit's common line (R0..R5); a short delay holds it lit, then RSTR moves to the next. SL into TDO = the decimal point (CARRY / ZERO / 1Hz flag dots).
 # ---- Page 01: keypad matrix scan ----

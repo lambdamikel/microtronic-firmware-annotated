@@ -353,6 +353,7 @@
 # -----------------------------------------------------------------------------
 # Page 05
 
+    # === Halted-mode command handling (part of the PGM command path; partially traced). A subroutine here (RETN at 05:15) drives output lines R14/R15 from flag bits in M(4,d); from 05:16 it tests state bits in file 4 and branches to several command-handler pages (1/6/7/8/b/d at :02) -- the routing that sends a PGM digit to its handler. Exact per-command mapping still being traced. ===
     LDP    0        # 05:00 (05:00) 10  -  page-buffer = 0 (arm the next branch/call to page 0)
     BR     00       # 05:01 (05:01) 80  -  if status: branch to 00
     LDP    8        # 05:02 (05:03) 11  -  page-buffer = 8 (arm the next branch/call to page 8)

@@ -90,11 +90,13 @@ you pressed the key — human reaction time as an entropy source. Cheap, and goo
 enough to make a dice game feel fair.
 
 **The built‑in demo is a Microtronic program hiding in the ROM.** The single most
-satisfying discovery. The demo (a Nim game) isn't native code at all — it's a
-*Microtronic* program, stored in the firmware ROM as data, three constants per
-instruction, copied into RAM at startup and then run by the very interpreter the
-rest of the firmware implements. The machine ships an application written in its
-own invented language. The abstraction eats its own tail, on purpose.
+satisfying discovery. `PGM 7` — the Nim game — isn't native code at all; it's a
+*Microtronic* program, stored in the firmware ROM as data (three constants per
+instruction, pages `3a`–`3f`), loaded into RAM when you select it and then run by
+the very interpreter the rest of the firmware implements. The machine ships an
+application written in its own invented language. (Its source is printed in the
+Busch manual and disassembled in Jason's write‑up; an independent decode of the
+ROM bytes here matches.) The abstraction eats its own tail, on purpose.
 
 **Squeezing three jobs out of one bus.** The chip has four input lines. They serve
 as keypad rows, *and* the external digital inputs, *and* the SRAM data bus —

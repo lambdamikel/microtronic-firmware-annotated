@@ -629,23 +629,40 @@ Pressing `PGM` and a digit in halted mode runs one of the firmware's built‑in
 programs. There are two kinds, and the difference is the nicest structural point
 in the whole ROM.
 
-### 9.1 Native programs: self‑test and cassette
+### 9.1 Native programs (PGM 0–6)
 
-`PGM 0` (the hardware self‑test) and `PGM 1`/`PGM 2` (the 2095 cassette
-save/load) are **native TMS1600 routines** — they poke the hardware directly.
-The self‑test exercises the display, keypad, and I/O lines against a test
-harness; the cassette routines bit‑bang the 2095 interface (the tape format is
-FSK, built on the Microtronic's 32.768 kHz clock — which is also why a real 2095
-can't talk to an emulator that doesn't generate that clock). These are firmware,
-not Microtronic code.
+Seven of the eight built‑ins are **native TMS1600 routines** that poke the
+hardware directly. Per the Busch manual:
 
-### 9.2 Demo programs are Microtronic programs baked into ROM
+| PGM | function |
+|----:|----------|
+| 0 | **Self‑test** — exercises the display, keypad, and I/O lines |
+| 1 | **Load** a program from the 2095 cassette into RAM |
+| 2 | **Save** the RAM program onto cassette |
+| 3 | **Set** the time of day |
+| 4 | **Show** the time of day |
+| 5 | **Clear RAM** — erase the user program |
+| 6 | **Load‑NOP** — write `NOP` into every program address |
 
-The demo (identified by the team as a **Nim** game) is not native code at all —
-it is a **Microtronic program stored inside the TMS ROM as data**, in chapter 3
-(pages `3a`–`3f`). Each Microtronic instruction is encoded as **three `TCMIY`
-constants** (its three hex digits), followed by a `CALL` to the loader at
-`3a:00`:
+A few anchors traced so far: the software **clock** behind Set/Show‑Time (3/4) is
+read by the `TIME` handler at `12:18`; **Clear‑RAM** (5) reuses the
+`clear RAM file X` subroutine at `00:05`; **Load** and **Load‑NOP** (1/6) write
+through the SRAM writer at `0c:02` (§5.3); and the halted‑mode command dispatch
+that routes the `PGM` digit to its handler runs through the flag/state test on
+page `05`. The **cassette** routines (1/2) bit‑bang the 2095 interface: the tape
+format is FSK built on the Microtronic's 32.768 kHz clock — which is also why a
+real 2095 can't talk to an emulator that doesn't generate that clock. (PicoRAM
+re‑implements Load/Save as SD‑card operations, in its own firmware.) These are
+all firmware, not Microtronic code; per‑handler traces are on the
+[roadmap](04-discoveries.md#known-gaps-and-roadmap).
+
+### 9.2 PGM 7: a Microtronic program baked into ROM
+
+The eighth built‑in, **`PGM 7`**, is different in kind: it is the **Nim** game,
+and it is not native code at all — it is a **Microtronic program stored inside the
+TMS ROM as data**, in chapter 3 (pages `3a`–`3f`). Each Microtronic instruction is
+encoded as **three `TCMIY` constants** (its three hex digits, stored
+low‑nibble‑first), followed by a `CALL` to the loader at `3a:00`:
 
 ```
 3b:00  TCMIY f      \
@@ -660,6 +677,13 @@ through the very same write path as keypad entry (§5.3), advancing the address
 each time. When it finishes, the program simply **runs from SRAM under the normal
 interpreter** — fetch, decode, dispatch, execute — indistinguishable from a
 program the user typed in or loaded from tape.
+
+Its source is public twice over — the Busch manual prints the Nim listing
+(p.7–8), and Jason's write‑up disassembles it in full. An independent decode of
+the ROM bytes here matches that structure: setup and display (`DOT`/`DISP`), key
+input (`KIN`), a compare/add move‑computation loop, `HXDZ` for the decimal
+readout, and a flashing‑`DOT` win animation — with each instruction's three
+digits stored low‑nibble‑first.
 
 This closes the loop of the whole design: the firmware's own applications are
 written in the very 4‑bit instruction set that the rest of the firmware exists to

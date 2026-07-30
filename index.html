@@ -205,6 +205,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <a href="#L001a" class="navrt"><span class="navaddr">00:1a</span>Boot: run two init subroutines, then enter t…</a>
 <a href="#L0020" class="navrt"><span class="navaddr">00:20</span>Keypad / input handling</a>
 <a href="#L0100" class="navrt"><span class="navaddr">01:00</span>KEYPAD MATRIX SCAN</a>
+<a href="#L0500" class="navrt"><span class="navaddr">05:00</span>Halted-mode command handling</a>
 <a href="#L0802" class="navrt"><span class="navaddr">08:02</span>EXECUTE-INSTRUCTION entry: advance the progr…</a>
 <a href="#L0902" class="navrt"><span class="navaddr">09:02</span>EXTERNAL 2114 SRAM READ</a>
 <a href="#L0923" class="navrt"><span class="navaddr">09:23</span>Helper: one&#x27;s-complement a nibble</a>
@@ -570,6 +571,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L043f" data-a="0" data-s="04:3f mnea  (unused — 0x00 fill)"><a class="addr" href="#L043f">04:3f</a><span class="hex">00</span><span class="pad">MNEA</span><span class="cm gloss">(unused — 0x00 fill)</span></div>
 </section>
 <section class="page"><h2 id="P05">Page 05<span class="cp">chapter 0 · page 5</span></h2>
+<div class="banner">Halted-mode command handling (part of the PGM command path; partially traced). A subroutine here (RETN at <a class="xref" href="#L0515">05:15</a>) drives output lines R14/R15 from flag bits in M(4,d); from <a class="xref" href="#L0516">05:16</a> it tests state bits in file 4 and branches to several command-handler pages (1/6/7/8/b/d at :02) -- the routing that sends a PGM digit to its handler. Exact per-command mapping still being traced.</div>
 <div class="row" id="L0500" data-a="0" data-s="05:00 ldp 0 page-buffer = 0 (arm the next branch/call to page 0)"><a class="addr" href="#L0500">05:00</a><span class="hex">10</span><span class="flow">LDP</span><span class="op">0</span><span class="cm gloss">page-buffer = 0 (arm the next branch/call to page 0)</span></div>
 <div class="row" id="L0501" data-a="0" data-s="05:01 br 00 if status: branch to 00"><a class="addr" href="#L0501">05:01</a><span class="hex">80</span><span class="flow">BR</span><span class="op">00</span><span class="cm gloss">if status: branch to 00</span></div>
 <div class="row" id="L0502" data-a="0" data-s="05:02 ldp 8 page-buffer = 8 (arm the next branch/call to page 8)"><a class="addr" href="#L0502">05:02</a><span class="hex">11</span><span class="flow">LDP</span><span class="op">8</span><span class="cm gloss">page-buffer = 8 (arm the next branch/call to page 8)</span></div>
