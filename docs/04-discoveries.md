@@ -211,9 +211,12 @@ some is real substance still to be traced. The main pieces of unfinished work:
   1 Hz pulse (the 1 Hz output must be wired to DIN 4), with `M(4,6).3` as the
   "already‑counted" edge latch — found by toggling DIN 4 in the emulator and watching the
   digits carry at 10 s / 60 s; it's the same clock the `F06 TIME` handler at `12:18`
-  reads. That leaves the Set/Show‑Time *UI*, Self‑Test (0), and the cassette routines
-  (1/2). (PicoRAM re‑implements Load/Save as SD‑card operations, in its own firmware —
-  not the mask ROM.)
+  reads. **Show‑Time (4) is page `27`** (it stages the file‑4 clock into the file‑3 display
+  buffer) and **Self‑Test (0) is page `33`** (lamp test — all four DOT LEDs high — plus a
+  display test that reuses page 27); both verified by running them in the emulator. That
+  leaves only **Set‑Time (3)** (the digit‑entry UI on top of the file‑4 clock) and the
+  **cassette routines (1/2)** — the FSK‑timing ones, the hardest. (PicoRAM re‑implements
+  Load/Save as SD‑card operations, in its own firmware — not the mask ROM.)
 - **PGM 7 — the Nim game.** The eighth `PGM`, and the *only* built‑in stored as
   **Microtronic** code rather than native TMS: its bytecode lives in `3a–3f` (three
   `TCMIY` constants per instruction — stored low‑nibble‑first — `CALL`'d into SRAM

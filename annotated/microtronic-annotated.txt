@@ -2724,6 +2724,7 @@
 # -----------------------------------------------------------------------------
 # Page 27
 
+    # === PGM 4 = SHOW-TIME handler (VERIFIED by emulation). Reads the file-4 software clock M(4,0..5) (BCD sec1/sec10/min1/min10/hr1/hr10 - the same cells page 28 advances and F06 12:18 copies out) and stages it into the display buffer in file 3 (M(3,0..5)) so the 6-digit LED shows the time; sets display-mode flags (M(4,6).0, M(3,6/7/e)). Verified: run the clock a while, press PGM then 4 -> the clock value appears in M(3,0..5). ===
     LDX    4        # 27:00 (27:00) 29  -  X = 4 (select RAM file 4)
     TCY    6        # 27:01 (27:01) 46  -  Y = 6
     SBIT   0        # 27:02 (27:03) 30  -  set bit 0 of M(X,Y)
@@ -3556,6 +3557,7 @@
 # -----------------------------------------------------------------------------
 # Page 33
 
+    # === PGM 0 = SELF-TEST handler (VERIFIED by emulation). Lamp + display test: drives all four DOT output LEDs (R7-R10) high, cycles test patterns onto the display (reusing the show-time/display path at page 27), and exercises I/O; loops. Verified: press PGM then 0 -> page 33 runs heavily and R7-R10 all go high. Works with page 31. ===
     TCY    1        # 33:00 (33:00) 48  -  Y = 1
     TMA             # 33:01 (33:01) 21  -  A = M(X,Y)
     TCY    0        # 33:02 (33:03) 40  -  Y = 0
