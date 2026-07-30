@@ -2448,7 +2448,7 @@
 # -----------------------------------------------------------------------------
 # Page 23
 
-    # === PGM 1 = CASSETTE LOAD (2095 tape -> program RAM). Located by emulation. FSK bit-read loop: SETR R6 gates the tape signal onto the K input, TKA samples the bit, RSTR R6 (23:00-05); it decodes the FSK stream into instruction nibbles and writes them to the program SRAM. Very slow (~14 baud). Real-time - the headless emulator confirms the entry/structure but spins with no tape attached; the actual FSK timing is verifiable only on real 2095 hardware. (NB: PicoRAM emulates the 2114 program SRAM, not the 2095 cassette - it does NOT re-implement PGM 1/2; a separate 2095 emulator handles the tape.) ===
+    # === PGM 1 = CASSETTE LOAD (2095 tape -> program RAM). Located by emulation. FSK bit-read loop: SETR R6 gates the tape signal onto the K input, TKA samples the bit, RSTR R6 (23:00-05); it decodes the FSK stream into instruction nibbles and writes them to the program SRAM. TAPE FORMAT (square-wave FSK, confirmed via Ingo Rullhusen's mic2wav/wav2mic codec AND by decoding a real off-air recording): 568Hz=bit0, 1136Hz=bit1, 2272Hz=leader/sync/end; ~10s leader, then each line = 3 hex digits, 4 bits/nibble sent LSB-first at 63ms/bit (first bit 47ms, ~16 baud); lines 1..255 each preceded by a 30ms@568 + 170ms@2272 sync; ~1s end tone. Decoder: dev-support/cassette_decode.py. Real-time - the headless emulator confirms the entry/structure but spins with no tape attached; the exact FSK bit timing runs only on real 2095 hardware. (NB: PicoRAM emulates the 2114 program SRAM, not the 2095 cassette - it does NOT re-implement PGM 1/2; a separate 2095 emulator handles the tape.) ===
     TCY    6        # 23:00 (23:00) 46  -  Y = 6
     SETR            # 23:01 (23:01) 0d  -  set output line R[Y]
     TKA             # 23:02 (23:03) 08  -  A = K inputs
@@ -3904,7 +3904,7 @@
 # -----------------------------------------------------------------------------
 # Page 38
 
-    # === PGM 2 = CASSETTE SAVE (program RAM -> 2095 tape). Located by emulation. FSK bit-write loop: reads the program from SRAM and drives the cassette output lines (R14/R15) in a timed loop to encode each nibble as FSK (tape format built on the 32.768kHz clock), at a very slow ~14 baud. Real-time bit-banging - located here, but the FSK timing is verifiable only on real 2095 hardware. ===
+    # === PGM 2 = CASSETTE SAVE (program RAM -> 2095 tape). Located by emulation. FSK bit-write loop: reads the program from SRAM and drives the cassette output lines (R14/R15) in a timed loop to encode each nibble as FSK. Same TAPE FORMAT as PGM 1 LOAD (page 23): square-wave FSK, 568Hz=bit0 / 1136Hz=bit1 / 2272Hz=leader/sync/end; ~10s leader, 3 hex digits/line sent 4 bits/nibble LSB-first at 63ms/bit (~16 baud), per-line 30ms@568 + 170ms@2272 sync, ~1s end tone - confirmed via Ingo Rullhusen's mic2wav/wav2mic codec and by decoding a real recording (dev-support/cassette_decode.py). Real-time bit-banging - located here, but the exact FSK timing runs only on real 2095 hardware. ===
     LDX    4        # 38:00 (38:00) 29  -  X = 4 (select RAM file 4)
     TCY    e        # 38:01 (38:01) 47  -  Y = e
     RSTR            # 38:02 (38:03) 0c  -  clear output line R[Y]
