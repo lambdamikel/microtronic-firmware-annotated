@@ -2724,7 +2724,7 @@
 # -----------------------------------------------------------------------------
 # Page 27
 
-    # === PGM 4 = SHOW-TIME handler (VERIFIED by emulation). Reads the file-4 software clock M(4,0..5) (BCD sec1/sec10/min1/min10/hr1/hr10 - the same cells page 28 advances and F06 12:18 copies out) and stages it into the display buffer in file 3 (M(3,0..5)) so the 6-digit LED shows the time; sets display-mode flags (M(4,6).0, M(3,6/7/e)). Verified: run the clock a while, press PGM then 4 -> the clock value appears in M(3,0..5). ===
+    # === PGM 3 (SET-TIME) + PGM 4 (SHOW-TIME) = shared time UI (VERIFIED by emulation). Both operate on the file-4 BCD clock M(4,0..5) (sec1/sec10/min1/min10/hr1/hr10 - the cells page 28 advances and F06 12:18 copies out). SHOW-TIME (4): stages the clock into the file-3 display buffer M(3,0..5) so the 6-digit LED shows the time; sets display-mode flags (M(4,6).0, M(3,6/7/e)). SET-TIME (3): shifts entered HH:MM digits into the clock as a 4-digit shift register (each key -> M(4,2)=min1, shifting min1->min10->hr1->hr10 up via the XMA chain at 27:11-1e), and resets seconds M(4,0..1) to 00. Verified: PGM 4 -> clock appears in M(3,0..5); PGM 3 then digits -> they shift into M(4,2..5). ===
     LDX    4        # 27:00 (27:00) 29  -  X = 4 (select RAM file 4)
     TCY    6        # 27:01 (27:01) 46  -  Y = 6
     SBIT   0        # 27:02 (27:03) 30  -  set bit 0 of M(X,Y)

@@ -214,8 +214,10 @@ some is real substance still to be traced. The main pieces of unfinished work:
   reads. **Show‑Time (4) is page `27`** (it stages the file‑4 clock into the file‑3 display
   buffer) and **Self‑Test (0) is page `33`** (lamp test — all four DOT LEDs high — plus a
   display test that reuses page 27); both verified by running them in the emulator. That
-  leaves only **Set‑Time (3)** (the digit‑entry UI on top of the file‑4 clock) and the
-  **cassette routines (1/2)** — the FSK‑timing ones, the hardest. (PicoRAM re‑implements
+  **Set‑Time (3) also shares page `27`** with Show‑Time: the `XMA` chain at `27:11‑1e`
+  shifts entered HH:MM digits into the clock (each key -> `M(4,2)`, shifting up), seconds reset
+  — verified in the emulator. That leaves only the **cassette routines (1/2)** — the real‑time
+  FSK ones, which a headless non‑cycle‑accurate emulator can locate but not fully time‑verify. (PicoRAM re‑implements
   Load/Save as SD‑card operations, in its own firmware — not the mask ROM.)
 - **PGM 7 — the Nim game.** The eighth `PGM`, and the *only* built‑in stored as
   **Microtronic** code rather than native TMS: its bytecode lives in `3a–3f` (three
