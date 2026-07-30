@@ -229,7 +229,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <a href="#L1f00" class="navrt"><span class="navaddr">1f:00</span>R13:R14:R15 staging helper</a>
 <a href="#L2904" class="navrt"><span class="navaddr">29:04</span>F0x EXTENDED-OP DISPATCH</a>
 <a href="#L2b00" class="navrt"><span class="navaddr">2b:00</span>MULT</a>
-<a href="#L3a00" class="navrt"><span class="navaddr">3a:00</span>EMBEDDED MICROTRONIC PROGRAMS</a>
+<a href="#L3a00" class="navrt"><span class="navaddr">3a:00</span>PGM 7 = the NIM GAME</a>
   </nav>
   <main>
     <section class="page"><h2 id="P00">Page 00<span class="cp">chapter 0 · page 0</span></h2>
@@ -4092,7 +4092,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L393f" data-a="0" data-s="39:3f mnea  (unused — 0x00 fill)"><a class="addr" href="#L393f">39:3f</a><span class="hex">00</span><span class="pad">MNEA</span><span class="cm gloss">(unused — 0x00 fill)</span></div>
 </section>
 <section class="page"><h2 id="P3a">Page 3a<span class="cp">chapter 3 · page a</span></h2>
-<div class="banner">EMBEDDED MICROTRONIC PROGRAMS. The built-in demo/self-test program(s) are stored here as Microtronic CODE: each instruction is three TCMIY constants (its three hex digits), and a CALL to the loader at <a class="xref" href="#L3a00">3a:00</a> writes it into external SRAM. The interpreter then runs it exactly like a typed-in or cassette-loaded program. ~69 instructions across 3a-3f (identified by Decle/Jason as the Nim game).</div>
+<div class="banner">PGM 7 = the NIM GAME (Busch manual p.7-8) -- the one built-in stored as Microtronic CODE, not native TMS. Each instruction = three TCMIY constants (its three hex digits, stored LOW-NIBBLE-FIRST); a CALL to the loader at <a class="xref" href="#L3a00">3a:00</a> writes it into external SRAM, and the interpreter then runs it like any typed-in program. ~66-69 instructions across 3a-3f, identified by Decle/Jason (Jason published a full disassembly). The other PGM 0-6 are native TMS routines elsewhere: 0 self-test, 1/2 cassette load/save, 3/4 set/show time, 5 clear RAM, 6 load-NOP.</div>
 <div class="row" id="L3a00" data-a="1" data-s="3a:00 tcy 4 program loader: write the just-built 3-nibble instruction to the next sram slot and advance the address"><a class="addr" href="#L3a00">3a:00</a><span class="hex">42</span><span class="mn">TCY</span><span class="op">4</span><span class="cm">program loader: write the just-built 3-nibble instruction to the next SRAM slot and advance the address</span></div>
 <div class="row" id="L3a01" data-a="1" data-s="3a:01 imac  bump the sram write pointer (increment; carry into the high nibble)"><a class="addr" href="#L3a01">3a:01</a><span class="hex">3e</span><span class="test">IMAC</span><span class="cm">bump the SRAM write pointer (increment; carry into the high nibble)</span></div>
 <div class="row" id="L3a02" data-a="0" data-s="3a:02 br 05 if status: branch to 05"><a class="addr" href="#L3a02">3a:02</a><span class="hex">9f</span><span class="flow">BR</span><span class="op">05</span><span class="cm gloss">if status: branch to 05</span></div>

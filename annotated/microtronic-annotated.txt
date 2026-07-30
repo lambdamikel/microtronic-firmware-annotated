@@ -4034,7 +4034,7 @@
 # -----------------------------------------------------------------------------
 # Page 3a
 
-    # === EMBEDDED MICROTRONIC PROGRAMS. The built-in demo/self-test program(s) are stored here as Microtronic CODE: each instruction is three TCMIY constants (its three hex digits), and a CALL to the loader at 3a:00 writes it into external SRAM. The interpreter then runs it exactly like a typed-in or cassette-loaded program. ~69 instructions across 3a-3f (identified by Decle/Jason as the Nim game). ===
+    # === PGM 7 = the NIM GAME (Busch manual p.7-8) -- the one built-in stored as Microtronic CODE, not native TMS. Each instruction = three TCMIY constants (its three hex digits, stored LOW-NIBBLE-FIRST); a CALL to the loader at 3a:00 writes it into external SRAM, and the interpreter then runs it like any typed-in program. ~66-69 instructions across 3a-3f, identified by Decle/Jason (Jason published a full disassembly). The other PGM 0-6 are native TMS routines elsewhere: 0 self-test, 1/2 cassette load/save, 3/4 set/show time, 5 clear RAM, 6 load-NOP. ===
     TCY    4        # 3a:00 (3a:00) 42  -  program loader: write the just-built 3-nibble instruction to the next SRAM slot and advance the address
     IMAC            # 3a:01 (3a:01) 3e  -  bump the SRAM write pointer (increment; carry into the high nibble)
     BR     05       # 3a:02 (3a:03) 9f  -  if status: branch to 05

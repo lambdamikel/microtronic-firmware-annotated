@@ -191,17 +191,24 @@ uneven — more than half the ROM's pages currently carry only a mechanical,
 per‑instruction decode. Some of that is genuine `0x00` padding that needs nothing;
 some is real substance still to be traced. The main pieces of unfinished work:
 
-- **The seven built‑in `PGM` functions.** The `PGM` key invokes native TMS1600
-  routines — **0** Self‑Test, **1** Save, **2** Load, **3** Show Time, **4** Set
-  Time, **5** Clear RAM, **6** Load‑NOP — and none is yet documented as such.
-  Early candidates: Clear‑RAM reuses the `clear RAM file X` subroutine at `00:05`;
-  Self‑Test looks like page `05` (it lamp‑tests the display outputs and launches
-  the Nim demo); Load and Load‑NOP go through the SRAM writer at `0c:02`;
-  Show/Set‑Time is the 1 Hz software‑clock code — the "adjacent timekeeping" Jason
-  noted but did not publish. Tracing these is the next focused effort.
-- **The Nim program as a listing.** It is stored as bytecode in `3a–3f` and
-  identified, but not yet rendered as a Microtronic assembly listing *in this
-  repo* (Jason has one in his write‑up).
+- **The seven native `PGM` functions.** The `PGM` key invokes native TMS1600
+  routines. Per the Busch manual: **0** Self‑Test, **1** Load (cassette→RAM),
+  **2** Save (RAM→cassette), **3** Set time of day, **4** Show time of day,
+  **5** Clear RAM (delete programs), **6** Load‑NOP (write `NOP` to every program
+  address). Confirmed anchors so far: the software **clock** that Set/Show‑Time
+  (3/4) read sits behind the `TIME` handler at `12:18` (Jason's "adjacent
+  timekeeping"); Clear‑RAM (5) reuses the `clear RAM file X` subroutine at `00:05`;
+  Load and Load‑NOP (1/6) drive the SRAM writer at `0c:02`; Load/Save (1/2) add the
+  cassette FSK timing. Documenting each as its own section is the next focused
+  effort. (PicoRAM re‑implements Load/Save as SD‑card operations, in its own
+  firmware — not the mask ROM.)
+- **PGM 7 — the Nim game.** The eighth `PGM`, and the *only* built‑in stored as
+  **Microtronic** code rather than native TMS: its bytecode lives in `3a–3f` (three
+  `TCMIY` constants per instruction — stored low‑nibble‑first — `CALL`'d into SRAM
+  by the loader at `3a:00`, then run by the interpreter). Identified by Decle/Jason,
+  who published a full disassembly; an independent decode here confirms the
+  structure (~66–69 instructions, every branch target in range). A clean in‑repo
+  listing, reconciled against Jason's, is the small remaining task.
 - **~25 pages of native routines** — cassette FSK timing, operand data paths,
   display and arithmetic helpers — that have a per‑instruction gloss but no
   high‑level note. Several bear more than mechanical decode.
