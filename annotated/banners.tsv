@@ -62,3 +62,16 @@
 2b:00	MULT (F0B) and DIV (F0C): 6-digit (4-digit for DIV) decimal multiply/divide by repeated addition/subtraction. The second operand lives in the extended register bank (file 6); MULT clears it afterwards.
 # ---- Chapter 3 (pages 3a-3f): embedded Microtronic programs ----
 3a:00	PGM 7 = the NIM GAME (Busch manual p.7-8) -- the one built-in stored as Microtronic CODE, not native TMS. Each instruction = three TCMIY constants (its three hex digits, stored LOW-NIBBLE-FIRST); a CALL to the loader at 3a:00 writes it into external SRAM, and the interpreter then runs it like any typed-in program. ~66-69 instructions across 3a-3f, identified by Decle/Jason (Jason published a full disassembly). The other PGM 0-6 are native TMS routines elsewhere: 0 self-test, 1/2 cassette load/save, 3/4 set/show time, 5 clear RAM, 6 load-NOP.
+
+# ----- role banners for previously gloss-only pages (roles attributed by running the ROM in the emulator) -----
+1b:00	CARRY-flag helpers: set (1b:00-04) and clear (1b:05-0b) the carry flag M(4,13).0 - called by the arithmetic/logic/shift/ADC-SUBC ops to record their carry result, so this page is reached on essentially every flag-setting instruction (hot path). Also holds related flag/counter logic.
+13:00	DISPLAY-CONTENT STAGING (file 3): formats instruction/data fields into the file-3 display state that the refresh loop (page 0d) then multiplexes onto the 6-digit LED. Reached constantly during refresh and very heavily by the DISP (F1-F6) ops. [role attributed by running the ROM in the emulator]
+0a:00	Part of the NEXT command: advances the shown program address during entry / single-step. [role attributed by emulation - reached when NEXT is pressed]
+03:00	Part of the REG command: shows a register's value on the display. [role attributed by emulation - reached when REG is pressed]
+20:00	Shared display/format helper, reached by the REG command and by the arithmetic ops. [role attributed by emulation]
+31:00	PGM 0 Self-Test helper (runs with the main self-test on page 33). [attributed by emulation]
+32:00	PGM 0 Self-Test helper (runs with page 33). [attributed by emulation]
+3c:00	PGM 7 (Nim) bytecode, continued from page 3a: TCMIY constants = the Microtronic program, loaded to SRAM by the 3a:00 loader (data, not native TMS code). See the 3a banner.
+3d:00	PGM 7 (Nim) bytecode, continued (data; see the 3a banner).
+3e:00	PGM 7 (Nim) bytecode, continued (data; see the 3a banner).
+3f:00	PGM 7 (Nim) bytecode, continued + trailing 0x00 fill (see the 3a banner).

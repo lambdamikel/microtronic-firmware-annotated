@@ -205,12 +205,14 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <a href="#L001a" class="navrt"><span class="navaddr">00:1a</span>Boot: run two init subroutines, then enter t…</a>
 <a href="#L0020" class="navrt"><span class="navaddr">00:20</span>Keypad / input handling</a>
 <a href="#L0100" class="navrt"><span class="navaddr">01:00</span>KEYPAD MATRIX SCAN</a>
+<a href="#L0300" class="navrt"><span class="navaddr">03:00</span>Part of the REG command: shows a register&#x27;s …</a>
 <a href="#L0500" class="navrt"><span class="navaddr">05:00</span>Halted-mode command handling</a>
 <a href="#L0600" class="navrt"><span class="navaddr">06:00</span>Command-mode state machine</a>
 <a href="#L0700" class="navrt"><span class="navaddr">07:00</span>Command-mode state machine, continued</a>
 <a href="#L0802" class="navrt"><span class="navaddr">08:02</span>EXECUTE-INSTRUCTION entry: advance the progr…</a>
 <a href="#L0902" class="navrt"><span class="navaddr">09:02</span>EXTERNAL 2114 SRAM READ</a>
 <a href="#L0923" class="navrt"><span class="navaddr">09:23</span>Helper: one&#x27;s-complement a nibble</a>
+<a href="#L0a00" class="navrt"><span class="navaddr">0a:00</span>Part of the NEXT command: advances the shown…</a>
 <a href="#L0c02" class="navrt"><span class="navaddr">0c:02</span>EXTERNAL 2114 SRAM WRITE</a>
 <a href="#L0d00" class="navrt"><span class="navaddr">0d:00</span>7-SEGMENT DISPLAY REFRESH</a>
 <a href="#L0f00" class="navrt"><span class="navaddr">0f:00</span>RESET / boot entry -- power-on begins here</a>
@@ -218,6 +220,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <a href="#L1000" class="navrt"><span class="navaddr">10:00</span>OPCODE DISPATCH</a>
 <a href="#L1100" class="navrt"><span class="navaddr">11:00</span>Second-level opcode dispatch: commands 0-4</a>
 <a href="#L1200" class="navrt"><span class="navaddr">12:00</span>F0-F8 SUB-DISPATCH</a>
+<a href="#L1300" class="navrt"><span class="navaddr">13:00</span>DISPLAY-CONTENT STAGING</a>
 <a href="#L1400" class="navrt"><span class="navaddr">14:00</span>Control flow: GOTO/CALL set the program coun…</a>
 <a href="#L1600" class="navrt"><span class="navaddr">16:00</span>SUB/SUBI/CMP/CMPI: SAMAN computes Rd - opera…</a>
 <a href="#L161b" class="navrt"><span class="navaddr">16:1b</span>Operand fetch helpers: resolve a register op…</a>
@@ -225,20 +228,28 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <a href="#L1800" class="navrt"><span class="navaddr">18:00</span>I/O F-OPERATIONS</a>
 <a href="#L1900" class="navrt"><span class="navaddr">19:00</span>ADC</a>
 <a href="#L1a00" class="navrt"><span class="navaddr">1a:00</span>Shared helper 1a:00 = &quot;A &lt;- Rd&quot;</a>
+<a href="#L1b00" class="navrt"><span class="navaddr">1b:00</span>CARRY-flag helpers: set</a>
 <a href="#L1c00" class="navrt"><span class="navaddr">1c:00</span>OR handler</a>
 <a href="#L1c21" class="navrt"><span class="navaddr">1c:21</span>RUN CHECK</a>
 <a href="#L1c2c" class="navrt"><span class="navaddr">1c:2c</span></a>
 <a href="#L1d00" class="navrt"><span class="navaddr">1d:00</span>HXDZ</a>
 <a href="#L1f00" class="navrt"><span class="navaddr">1f:00</span>R13:R14:R15 staging helper</a>
+<a href="#L2000" class="navrt"><span class="navaddr">20:00</span>Shared display/format helper, reached by the…</a>
 <a href="#L2300" class="navrt"><span class="navaddr">23:00</span>PGM 1 = CASSETTE LOAD</a>
 <a href="#L2700" class="navrt"><span class="navaddr">27:00</span>PGM 3</a>
 <a href="#L2800" class="navrt"><span class="navaddr">28:00</span>1Hz CLOCK ADVANCE = background timekeeping</a>
 <a href="#L2904" class="navrt"><span class="navaddr">29:04</span>F0x EXTENDED-OP DISPATCH</a>
 <a href="#L2b00" class="navrt"><span class="navaddr">2b:00</span>MULT</a>
 <a href="#L3000" class="navrt"><span class="navaddr">30:00</span>PGM 5</a>
+<a href="#L3100" class="navrt"><span class="navaddr">31:00</span>PGM 0 Self-Test helper</a>
+<a href="#L3200" class="navrt"><span class="navaddr">32:00</span>PGM 0 Self-Test helper</a>
 <a href="#L3300" class="navrt"><span class="navaddr">33:00</span>PGM 0 = SELF-TEST handler</a>
 <a href="#L3800" class="navrt"><span class="navaddr">38:00</span>PGM 2 = CASSETTE SAVE</a>
 <a href="#L3a00" class="navrt"><span class="navaddr">3a:00</span>PGM 7 = the NIM GAME</a>
+<a href="#L3c00" class="navrt"><span class="navaddr">3c:00</span>PGM 7</a>
+<a href="#L3d00" class="navrt"><span class="navaddr">3d:00</span>PGM 7</a>
+<a href="#L3e00" class="navrt"><span class="navaddr">3e:00</span>PGM 7</a>
+<a href="#L3f00" class="navrt"><span class="navaddr">3f:00</span>PGM 7</a>
   </nav>
   <main>
     <section class="page"><h2 id="P00">Page 00<span class="cp">chapter 0 · page 0</span></h2>
@@ -447,6 +458,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L023f" data-a="0" data-s="02:3f mnea  (unused — 0x00 fill)"><a class="addr" href="#L023f">02:3f</a><span class="hex">00</span><span class="pad">MNEA</span><span class="cm gloss">(unused — 0x00 fill)</span></div>
 </section>
 <section class="page"><h2 id="P03">Page 03<span class="cp">chapter 0 · page 3</span></h2>
+<div class="banner">Part of the REG command: shows a register&#x27;s value on the display. [role attributed by emulation - reached when REG is pressed]</div>
 <div class="row" id="L0300" data-a="0" data-s="03:00 ldp 0 page-buffer = 0 (arm the next branch/call to page 0)"><a class="addr" href="#L0300">03:00</a><span class="hex">10</span><span class="flow">LDP</span><span class="op">0</span><span class="cm gloss">page-buffer = 0 (arm the next branch/call to page 0)</span></div>
 <div class="row" id="L0301" data-a="0" data-s="03:01 br 00 if status: branch to 00"><a class="addr" href="#L0301">03:01</a><span class="hex">80</span><span class="flow">BR</span><span class="op">00</span><span class="cm gloss">if status: branch to 00</span></div>
 <div class="row" id="L0302" data-a="0" data-s="03:02 tcy f y = f"><a class="addr" href="#L0302">03:02</a><span class="hex">4f</span><span class="mn">TCY</span><span class="op">f</span><span class="cm gloss">Y = f</span></div>
@@ -915,6 +927,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L093f" data-a="0" data-s="09:3f mnea  (unused — 0x00 fill)"><a class="addr" href="#L093f">09:3f</a><span class="hex">00</span><span class="pad">MNEA</span><span class="cm gloss">(unused — 0x00 fill)</span></div>
 </section>
 <section class="page"><h2 id="P0a">Page 0a<span class="cp">chapter 0 · page a</span></h2>
+<div class="banner">Part of the NEXT command: advances the shown program address during entry / single-step. [role attributed by emulation - reached when NEXT is pressed]</div>
 <div class="row" id="L0a00" data-a="0" data-s="0a:00 ldp 0 page-buffer = 0 (arm the next branch/call to page 0)"><a class="addr" href="#L0a00">0a:00</a><span class="hex">10</span><span class="flow">LDP</span><span class="op">0</span><span class="cm gloss">page-buffer = 0 (arm the next branch/call to page 0)</span></div>
 <div class="row" id="L0a01" data-a="0" data-s="0a:01 br 00 if status: branch to 00"><a class="addr" href="#L0a01">0a:01</a><span class="hex">80</span><span class="flow">BR</span><span class="op">00</span><span class="cm gloss">if status: branch to 00</span></div>
 <div class="row" id="L0a02" data-a="0" data-s="0a:02 ldx 2 x = 2 (select ram file 2)"><a class="addr" href="#L0a02">0a:02</a><span class="hex">2a</span><span class="mn">LDX</span><span class="op">2</span><span class="cm gloss">X = 2 (select RAM file 2)</span></div>
@@ -1516,6 +1529,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L123f" data-a="0" data-s="12:3f mnea  (unused — 0x00 fill)"><a class="addr" href="#L123f">12:3f</a><span class="hex">00</span><span class="pad">MNEA</span><span class="cm gloss">(unused — 0x00 fill)</span></div>
 </section>
 <section class="page"><h2 id="P13">Page 13<span class="cp">chapter 1 · page 3</span></h2>
+<div class="banner">DISPLAY-CONTENT STAGING (file 3): formats instruction/data fields into the file-3 display state that the refresh loop (page 0d) then multiplexes onto the 6-digit LED. Reached constantly during refresh and very heavily by the DISP (F1-F6) ops. [role attributed by running the ROM in the emulator]</div>
 <div class="row" id="L1300" data-a="0" data-s="13:00 ldx 1 x = 1 (select ram file 1)"><a class="addr" href="#L1300">13:00</a><span class="hex">2c</span><span class="mn">LDX</span><span class="op">1</span><span class="cm gloss">X = 1 (select RAM file 1)</span></div>
 <div class="row" id="L1301" data-a="0" data-s="13:01 tcy 1 y = 1"><a class="addr" href="#L1301">13:01</a><span class="hex">48</span><span class="mn">TCY</span><span class="op">1</span><span class="cm gloss">Y = 1</span></div>
 <div class="row" id="L1302" data-a="0" data-s="13:02 tma  a = m(x,y)"><a class="addr" href="#L1302">13:02</a><span class="hex">21</span><span class="mn">TMA</span><span class="cm gloss">A = M(X,Y)</span></div>
@@ -2051,6 +2065,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L1a3f" data-a="0" data-s="1a:3f br 38 if status: branch to 38"><a class="addr" href="#L1a3f">1a:3f</a><span class="hex">a5</span><span class="flow">BR</span><span class="op">38</span><span class="cm gloss">if status: branch to 38</span></div>
 </section>
 <section class="page"><h2 id="P1b">Page 1b<span class="cp">chapter 1 · page b</span></h2>
+<div class="banner">CARRY-flag helpers: set (<a class="xref" href="#L1b00">1b:00</a>-04) and clear (<a class="xref" href="#L1b05">1b:05</a>-0b) the carry flag M(4,13).0 - called by the arithmetic/logic/shift/ADC-SUBC ops to record their carry result, so this page is reached on essentially every flag-setting instruction (hot path). Also holds related flag/counter logic.</div>
 <div class="row" id="L1b00" data-a="0" data-s="1b:00 ldx 4 x = 4 (select ram file 4)"><a class="addr" href="#L1b00">1b:00</a><span class="hex">29</span><span class="mn">LDX</span><span class="op">4</span><span class="cm gloss">X = 4 (select RAM file 4)</span></div>
 <div class="row" id="L1b01" data-a="0" data-s="1b:01 tcy d y = d"><a class="addr" href="#L1b01">1b:01</a><span class="hex">4b</span><span class="mn">TCY</span><span class="op">d</span><span class="cm gloss">Y = d</span></div>
 <div class="row" id="L1b02" data-a="0" data-s="1b:02 sbit 0 set bit 0 of m(x,y)"><a class="addr" href="#L1b02">1b:02</a><span class="hex">30</span><span class="mn">SBIT</span><span class="op">0</span><span class="cm gloss">set bit 0 of M(X,Y)</span></div>
@@ -2386,6 +2401,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L1f3f" data-a="0" data-s="1f:3f mnea  (unused — 0x00 fill)"><a class="addr" href="#L1f3f">1f:3f</a><span class="hex">00</span><span class="pad">MNEA</span><span class="cm gloss">(unused — 0x00 fill)</span></div>
 </section>
 <section class="page"><h2 id="P20">Page 20<span class="cp">chapter 2 · page 0</span></h2>
+<div class="banner">Shared display/format helper, reached by the REG command and by the arithmetic ops. [role attributed by emulation]</div>
 <div class="row" id="L2000" data-a="0" data-s="20:00 ldx 3 x = 3 (select ram file 3)"><a class="addr" href="#L2000">20:00</a><span class="hex">2e</span><span class="mn">LDX</span><span class="op">3</span><span class="cm gloss">X = 3 (select RAM file 3)</span></div>
 <div class="row" id="L2001" data-a="0" data-s="20:01 tcy 6 y = 6"><a class="addr" href="#L2001">20:01</a><span class="hex">46</span><span class="mn">TCY</span><span class="op">6</span><span class="cm gloss">Y = 6</span></div>
 <div class="row" id="L2002" data-a="0" data-s="20:02 sbit 1 set bit 1 of m(x,y)"><a class="addr" href="#L2002">20:02</a><span class="hex">32</span><span class="mn">SBIT</span><span class="op">1</span><span class="cm gloss">set bit 1 of M(X,Y)</span></div>
@@ -3514,6 +3530,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L303f" data-a="0" data-s="30:3f mnea  (unused — 0x00 fill)"><a class="addr" href="#L303f">30:3f</a><span class="hex">00</span><span class="pad">MNEA</span><span class="cm gloss">(unused — 0x00 fill)</span></div>
 </section>
 <section class="page"><h2 id="P31">Page 31<span class="cp">chapter 3 · page 1</span></h2>
+<div class="banner">PGM 0 Self-Test helper (runs with the main self-test on page 33). [attributed by emulation]</div>
 <div class="row" id="L3100" data-a="0" data-s="31:00 ldp 1 page-buffer = 1 (arm the next branch/call to page 1)"><a class="addr" href="#L3100">31:00</a><span class="hex">18</span><span class="flow">LDP</span><span class="op">1</span><span class="cm gloss">page-buffer = 1 (arm the next branch/call to page 1)</span></div>
 <div class="row" id="L3101" data-a="0" data-s="31:01 tpc  chapter-buffer = page-buffer (arm the next branch/call&#x27;s chapter)"><a class="addr" href="#L3101">31:01</a><span class="hex">0b</span><span class="flow">TPC</span><span class="cm gloss">chapter-buffer = page-buffer (arm the next branch/call&#x27;s chapter)</span></div>
 <div class="row" id="L3102" data-a="0" data-s="31:02 ldp e page-buffer = e (arm the next branch/call to page e)"><a class="addr" href="#L3102">31:02</a><span class="hex">17</span><span class="flow">LDP</span><span class="op">e</span><span class="cm gloss">page-buffer = e (arm the next branch/call to page e)</span></div>
@@ -3580,6 +3597,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L313f" data-a="0" data-s="31:3f mnea  (unused — 0x00 fill)"><a class="addr" href="#L313f">31:3f</a><span class="hex">00</span><span class="pad">MNEA</span><span class="cm gloss">(unused — 0x00 fill)</span></div>
 </section>
 <section class="page"><h2 id="P32">Page 32<span class="cp">chapter 3 · page 2</span></h2>
+<div class="banner">PGM 0 Self-Test helper (runs with page 33). [attributed by emulation]</div>
 <div class="row" id="L3200" data-a="0" data-s="32:00 ldp 1 page-buffer = 1 (arm the next branch/call to page 1)"><a class="addr" href="#L3200">32:00</a><span class="hex">18</span><span class="flow">LDP</span><span class="op">1</span><span class="cm gloss">page-buffer = 1 (arm the next branch/call to page 1)</span></div>
 <div class="row" id="L3201" data-a="0" data-s="32:01 call 00 if status: call 00"><a class="addr" href="#L3201">32:01</a><span class="hex">c0</span><span class="flow">CALL</span><span class="op">00</span><span class="cm gloss">if status: call 00</span></div>
 <div class="row" id="L3202" data-a="0" data-s="32:02 tcy 2 y = 2"><a class="addr" href="#L3202">32:02</a><span class="hex">44</span><span class="mn">TCY</span><span class="op">2</span><span class="cm gloss">Y = 2</span></div>
@@ -4243,6 +4261,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L3b3f" data-a="0" data-s="3b:3f mnea  (unused — 0x00 fill)"><a class="addr" href="#L3b3f">3b:3f</a><span class="hex">00</span><span class="pad">MNEA</span><span class="cm gloss">(unused — 0x00 fill)</span></div>
 </section>
 <section class="page"><h2 id="P3c">Page 3c<span class="cp">chapter 3 · page c</span></h2>
+<div class="banner">PGM 7 (Nim) bytecode, continued from page 3a: TCMIY constants = the Microtronic program, loaded to SRAM by the <a class="xref" href="#L3a00">3a:00</a> loader (data, not native TMS code). See the 3a banner.</div>
 <div class="row" id="L3c00" data-a="0" data-s="3c:00 tcmiy 2 m(x,y) = 2; y = y + 1"><a class="addr" href="#L3c00">3c:00</a><span class="hex">64</span><span class="mn">TCMIY</span><span class="op">2</span><span class="cm gloss">M(X,Y) = 2; Y = Y + 1</span></div>
 <div class="row" id="L3c01" data-a="0" data-s="3c:01 tcmiy 0 m(x,y) = 0; y = y + 1"><a class="addr" href="#L3c01">3c:01</a><span class="hex">60</span><span class="mn">TCMIY</span><span class="op">0</span><span class="cm gloss">M(X,Y) = 0; Y = Y + 1</span></div>
 <div class="row" id="L3c02" data-a="0" data-s="3c:02 tcmiy f m(x,y) = f; y = y + 1"><a class="addr" href="#L3c02">3c:02</a><span class="hex">6f</span><span class="mn">TCMIY</span><span class="op">f</span><span class="cm gloss">M(X,Y) = f; Y = Y + 1</span></div>
@@ -4309,6 +4328,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L3c3f" data-a="0" data-s="3c:3f mnea  (unused — 0x00 fill)"><a class="addr" href="#L3c3f">3c:3f</a><span class="hex">00</span><span class="pad">MNEA</span><span class="cm gloss">(unused — 0x00 fill)</span></div>
 </section>
 <section class="page"><h2 id="P3d">Page 3d<span class="cp">chapter 3 · page d</span></h2>
+<div class="banner">PGM 7 (Nim) bytecode, continued (data; see the 3a banner).</div>
 <div class="row" id="L3d00" data-a="0" data-s="3d:00 tcmiy 9 m(x,y) = 9; y = y + 1"><a class="addr" href="#L3d00">3d:00</a><span class="hex">69</span><span class="mn">TCMIY</span><span class="op">9</span><span class="cm gloss">M(X,Y) = 9; Y = Y + 1</span></div>
 <div class="row" id="L3d01" data-a="0" data-s="3d:01 tcmiy 2 m(x,y) = 2; y = y + 1"><a class="addr" href="#L3d01">3d:01</a><span class="hex">64</span><span class="mn">TCMIY</span><span class="op">2</span><span class="cm gloss">M(X,Y) = 2; Y = Y + 1</span></div>
 <div class="row" id="L3d02" data-a="0" data-s="3d:02 tcmiy c m(x,y) = c; y = y + 1"><a class="addr" href="#L3d02">3d:02</a><span class="hex">63</span><span class="mn">TCMIY</span><span class="op">c</span><span class="cm gloss">M(X,Y) = c; Y = Y + 1</span></div>
@@ -4375,6 +4395,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L3d3f" data-a="0" data-s="3d:3f mnea  (unused — 0x00 fill)"><a class="addr" href="#L3d3f">3d:3f</a><span class="hex">00</span><span class="pad">MNEA</span><span class="cm gloss">(unused — 0x00 fill)</span></div>
 </section>
 <section class="page"><h2 id="P3e">Page 3e<span class="cp">chapter 3 · page e</span></h2>
+<div class="banner">PGM 7 (Nim) bytecode, continued (data; see the 3a banner).</div>
 <div class="row" id="L3e00" data-a="0" data-s="3e:00 tcmiy 1 m(x,y) = 1; y = y + 1"><a class="addr" href="#L3e00">3e:00</a><span class="hex">68</span><span class="mn">TCMIY</span><span class="op">1</span><span class="cm gloss">M(X,Y) = 1; Y = Y + 1</span></div>
 <div class="row" id="L3e01" data-a="0" data-s="3e:01 tcmiy 4 m(x,y) = 4; y = y + 1"><a class="addr" href="#L3e01">3e:01</a><span class="hex">62</span><span class="mn">TCMIY</span><span class="op">4</span><span class="cm gloss">M(X,Y) = 4; Y = Y + 1</span></div>
 <div class="row" id="L3e02" data-a="0" data-s="3e:02 tcmiy f m(x,y) = f; y = y + 1"><a class="addr" href="#L3e02">3e:02</a><span class="hex">6f</span><span class="mn">TCMIY</span><span class="op">f</span><span class="cm gloss">M(X,Y) = f; Y = Y + 1</span></div>
@@ -4441,6 +4462,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L3e3f" data-a="0" data-s="3e:3f mnea  (unused — 0x00 fill)"><a class="addr" href="#L3e3f">3e:3f</a><span class="hex">00</span><span class="pad">MNEA</span><span class="cm gloss">(unused — 0x00 fill)</span></div>
 </section>
 <section class="page"><h2 id="P3f">Page 3f<span class="cp">chapter 3 · page f</span></h2>
+<div class="banner">PGM 7 (Nim) bytecode, continued + trailing 0x00 fill (see the 3a banner).</div>
 <div class="row" id="L3f00" data-a="0" data-s="3f:00 tcmiy a m(x,y) = a; y = y + 1"><a class="addr" href="#L3f00">3f:00</a><span class="hex">65</span><span class="mn">TCMIY</span><span class="op">a</span><span class="cm gloss">M(X,Y) = a; Y = Y + 1</span></div>
 <div class="row" id="L3f01" data-a="0" data-s="3f:01 tcmiy 3 m(x,y) = 3; y = y + 1"><a class="addr" href="#L3f01">3f:01</a><span class="hex">6c</span><span class="mn">TCMIY</span><span class="op">3</span><span class="cm gloss">M(X,Y) = 3; Y = Y + 1</span></div>
 <div class="row" id="L3f02" data-a="0" data-s="3f:02 tcmiy c m(x,y) = c; y = y + 1"><a class="addr" href="#L3f02">3f:02</a><span class="hex">63</span><span class="mn">TCMIY</span><span class="op">c</span><span class="cm gloss">M(X,Y) = c; Y = Y + 1</span></div>

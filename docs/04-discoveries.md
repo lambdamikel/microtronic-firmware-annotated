@@ -211,9 +211,9 @@ privilege to take apart either way.
 
 ## Coverage and remaining gaps
 
-As it stands, **36 of the ROM's 64 pages** carry a high-level banner and/or hand
-annotations (319 semantic notes plus 40 banners, layered over the mechanical
-per-instruction gloss that covers all 4,096 instructions); **28 pages still have
+As it stands, **47 of the ROM's 64 pages** carry a high-level banner and/or hand
+annotations (319 semantic notes plus 51 banners, layered over the mechanical
+per-instruction gloss that covers all 4,096 instructions); **17 pages still have
 only that mechanical decode**. The built-in program map is now **complete** - every
 `PGM 0-7` is located, and most are verified by *running the ROM* in the headless
 emulator (`dev-support/microtronic_emu.py`):
@@ -235,10 +235,13 @@ both documented too.
 
 What genuinely remains:
 
-- **28 pages with only a mechanical decode** - operand/arithmetic helpers, F-op
-  continuations, parts of the command state machine, and the Nim bytecode pages
-  (`3c-3f`, explained by the `3a` banner). Several bear more than mechanical decode;
-  this is the long tail of a 4 KB ROM.
+- **17 pages with only a mechanical decode** - the arithmetic edge-helpers and F-op
+  continuations in the `20-2f` / `34-39` clusters, which only execute under conditions
+  not yet exercised. The rest of the former long tail was *role-tagged by running the ROM*
+  in the emulator and watching which pages fire (e.g. `1b` = carry-flag helpers, `13` =
+  display-content staging, `0a` = NEXT, `03` = REG, `31`/`32` = self-test, `3c-3f` = the Nim
+  bytecode) - so those pages now carry at least a role banner. What's left is the genuine
+  remainder of a 4 KB ROM.
 - **The cassette FSK *timing*** (PGM 1/2) is real-time bit-banging clocked by the
   32.768 kHz reference; the emulator locates and explains the code, but the exact
   timing runs only on real 2095 hardware. (The *format* itself is confirmed - decoded

@@ -215,6 +215,7 @@
 # -----------------------------------------------------------------------------
 # Page 03
 
+    # === Part of the REG command: shows a register's value on the display. [role attributed by emulation - reached when REG is pressed] ===
     LDP    0        # 03:00 (03:00) 10  -  page-buffer = 0 (arm the next branch/call to page 0)
     BR     00       # 03:01 (03:01) 80  -  if status: branch to 00
     TCY    f        # 03:02 (03:03) 4f  -  Y = f
@@ -704,6 +705,7 @@
 # -----------------------------------------------------------------------------
 # Page 0a
 
+    # === Part of the NEXT command: advances the shown program address during entry / single-step. [role attributed by emulation - reached when NEXT is pressed] ===
     LDP    0        # 0a:00 (0a:00) 10  -  page-buffer = 0 (arm the next branch/call to page 0)
     BR     00       # 0a:01 (0a:01) 80  -  if status: branch to 00
     LDX    2        # 0a:02 (0a:03) 2a  -  X = 2 (select RAM file 2)
@@ -1332,6 +1334,7 @@
 # -----------------------------------------------------------------------------
 # Page 13
 
+    # === DISPLAY-CONTENT STAGING (file 3): formats instruction/data fields into the file-3 display state that the refresh loop (page 0d) then multiplexes onto the 6-digit LED. Reached constantly during refresh and very heavily by the DISP (F1-F6) ops. [role attributed by running the ROM in the emulator] ===
     LDX    1        # 13:00 (13:00) 2c  -  X = 1 (select RAM file 1)
     TCY    1        # 13:01 (13:01) 48  -  Y = 1
     TMA             # 13:02 (13:03) 21  -  A = M(X,Y)
@@ -1891,6 +1894,7 @@
 # -----------------------------------------------------------------------------
 # Page 1b
 
+    # === CARRY-flag helpers: set (1b:00-04) and clear (1b:05-0b) the carry flag M(4,13).0 - called by the arithmetic/logic/shift/ADC-SUBC ops to record their carry result, so this page is reached on essentially every flag-setting instruction (hot path). Also holds related flag/counter logic. ===
     LDX    4        # 1b:00 (1b:00) 29  -  X = 4 (select RAM file 4)
     TCY    d        # 1b:01 (1b:01) 4b  -  Y = d
     SBIT   0        # 1b:02 (1b:03) 30  -  set bit 0 of M(X,Y)
@@ -2241,6 +2245,7 @@
 # -----------------------------------------------------------------------------
 # Page 20
 
+    # === Shared display/format helper, reached by the REG command and by the arithmetic ops. [role attributed by emulation] ===
     LDX    3        # 20:00 (20:00) 2e  -  X = 3 (select RAM file 3)
     TCY    6        # 20:01 (20:01) 46  -  Y = 6
     SBIT   1        # 20:02 (20:03) 32  -  set bit 1 of M(X,Y)
@@ -3420,6 +3425,7 @@
 # -----------------------------------------------------------------------------
 # Page 31
 
+    # === PGM 0 Self-Test helper (runs with the main self-test on page 33). [attributed by emulation] ===
     LDP    1        # 31:00 (31:00) 18  -  page-buffer = 1 (arm the next branch/call to page 1)
     TPC            # 31:01 (31:01) 0b  -  chapter-buffer = page-buffer (arm the next branch/call's chapter)
     LDP    e        # 31:02 (31:03) 17  -  page-buffer = e (arm the next branch/call to page e)
@@ -3489,6 +3495,7 @@
 # -----------------------------------------------------------------------------
 # Page 32
 
+    # === PGM 0 Self-Test helper (runs with page 33). [attributed by emulation] ===
     LDP    1        # 32:00 (32:00) 18  -  page-buffer = 1 (arm the next branch/call to page 1)
     CALL   00       # 32:01 (32:01) c0  -  if status: call 00
     TCY    2        # 32:02 (32:03) 44  -  Y = 2
@@ -4182,6 +4189,7 @@
 # -----------------------------------------------------------------------------
 # Page 3c
 
+    # === PGM 7 (Nim) bytecode, continued from page 3a: TCMIY constants = the Microtronic program, loaded to SRAM by the 3a:00 loader (data, not native TMS code). See the 3a banner. ===
     TCMIY  2        # 3c:00 (3c:00) 64  -  M(X,Y) = 2; Y = Y + 1
     TCMIY  0        # 3c:01 (3c:01) 60  -  M(X,Y) = 0; Y = Y + 1
     TCMIY  f        # 3c:02 (3c:03) 6f  -  M(X,Y) = f; Y = Y + 1
@@ -4251,6 +4259,7 @@
 # -----------------------------------------------------------------------------
 # Page 3d
 
+    # === PGM 7 (Nim) bytecode, continued (data; see the 3a banner). ===
     TCMIY  9        # 3d:00 (3d:00) 69  -  M(X,Y) = 9; Y = Y + 1
     TCMIY  2        # 3d:01 (3d:01) 64  -  M(X,Y) = 2; Y = Y + 1
     TCMIY  c        # 3d:02 (3d:03) 63  -  M(X,Y) = c; Y = Y + 1
@@ -4320,6 +4329,7 @@
 # -----------------------------------------------------------------------------
 # Page 3e
 
+    # === PGM 7 (Nim) bytecode, continued (data; see the 3a banner). ===
     TCMIY  1        # 3e:00 (3e:00) 68  -  M(X,Y) = 1; Y = Y + 1
     TCMIY  4        # 3e:01 (3e:01) 62  -  M(X,Y) = 4; Y = Y + 1
     TCMIY  f        # 3e:02 (3e:03) 6f  -  M(X,Y) = f; Y = Y + 1
@@ -4389,6 +4399,7 @@
 # -----------------------------------------------------------------------------
 # Page 3f
 
+    # === PGM 7 (Nim) bytecode, continued + trailing 0x00 fill (see the 3a banner). ===
     TCMIY  a        # 3f:00 (3f:00) 65  -  M(X,Y) = a; Y = Y + 1
     TCMIY  3        # 3f:01 (3f:01) 6c  -  M(X,Y) = 3; Y = Y + 1
     TCMIY  c        # 3f:02 (3f:03) 63  -  M(X,Y) = c; Y = Y + 1
