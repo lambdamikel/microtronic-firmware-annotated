@@ -651,8 +651,8 @@ through the SRAM writer at `0c:02` (§5.3); and the halted‑mode command dispat
 that routes the `PGM` digit to its handler runs through the flag/state test on
 page `05`. The **cassette** routines (1/2) bit‑bang the 2095 interface: the tape
 format is FSK built on the Microtronic's 32.768 kHz clock — which is also why a
-real 2095 can't talk to an emulator that doesn't generate that clock. (PicoRAM
-re‑implements Load/Save as SD‑card operations, in its own firmware.) These are
+real 2095 can't talk to an emulator that doesn't generate that clock. (PicoRAM emulates the 2114 program SRAM, not the 2095 —
+so PGM 1/2 are unchanged; a separate 2095 emulator handles the tape.) These are
 all firmware, not Microtronic code; per‑handler traces are on the
 [roadmap](04-discoveries.md#known-gaps-and-roadmap).
 

@@ -220,8 +220,8 @@ some is real substance still to be traced. The main pieces of unfinished work:
   R6‑gated DIN input), Save (2) = page `38` (drives R14/R15 as FSK output) — both a very slow
   ~14 baud, located and structurally described, though the real‑time FSK timing is only
   verifiable on real 2095 hardware. **That completes the full built‑in PGM 0–7 map — every
-  one located by running the ROM in the emulator.** (PicoRAM re‑implements
-  Load/Save as SD‑card operations, in its own firmware — not the mask ROM.)
+  one located by running the ROM in the emulator.** (NB: PicoRAM emulates the 2114 program SRAM, not the 2095 cassette, so it does *not*
+  re‑implement PGM 1/2; a separate 2095 emulator handles the tape.)
 - **PGM 7 — the Nim game.** The eighth `PGM`, and the *only* built‑in stored as
   **Microtronic** code rather than native TMS: its bytecode lives in `3a–3f` (three
   `TCMIY` constants per instruction — stored low‑nibble‑first — `CALL`'d into SRAM
