@@ -200,15 +200,20 @@ some is real substance still to be traced. The main pieces of unfinished work:
   address). Confirmed anchors so far: the software **clock** that Set/Show‑Time
   (3/4) read sits behind the `TIME` handler at `12:18` (Jason's "adjacent
   timekeeping"); Clear‑RAM (5) reuses the `clear RAM file X` subroutine at `00:05`;
-  Load and Load‑NOP (1/6) drive the SRAM writer at `0c:02`; Load/Save (1/2) add the
-  cassette FSK timing. **Load‑NOP (6) is now fully traced and verified**: its handler
-  is page `30` — an `ACxAC` sub‑dispatch, then a loop that walks the SRAM address
-  `M(1,5):M(1,4)` from `FF` down to `0`, writing `F01` (NOP) into every slot. This was
-  confirmed by *running the ROM* in the new headless emulator
-  (`dev-support/microtronic_emu.py`): boot to idle, press `PGM` then `6`, and all 256
-  program slots become `F01`, with the writer called from `30:2a`. Documenting the
-  remaining five as their own sections is the next focused effort. (PicoRAM
-  re‑implements Load/Save as SD‑card operations, in its own firmware — not the mask ROM.)
+  Load/Save (1/2) add the cassette FSK timing. **Load‑NOP (6) and Clear‑RAM (5) are
+  traced and verified** — they *share* a handler on page `30`: an `ACxAC` sub‑dispatch
+  picks a fill value, then a loop walks the SRAM address `M(1,5):M(1,4)` from `FF` down
+  to `0`, writing it into every slot (writer called from `30:2a`). Confirmed by *running
+  the ROM* in the new headless emulator (`dev-support/microtronic_emu.py`): press `PGM`
+  then `6`/`5` and all 256 slots become `F01` (NOP) / `000`. **The Set/Show‑Time (3/4)
+  infrastructure is also located**: the software clock is `M(4,0..5)` (BCD
+  sec1/sec10/min1/min10/hr1/hr10), advanced by a background routine on page `28` on each
+  1 Hz pulse (the 1 Hz output must be wired to DIN 4), with `M(4,6).3` as the
+  "already‑counted" edge latch — found by toggling DIN 4 in the emulator and watching the
+  digits carry at 10 s / 60 s; it's the same clock the `F06 TIME` handler at `12:18`
+  reads. That leaves the Set/Show‑Time *UI*, Self‑Test (0), and the cassette routines
+  (1/2). (PicoRAM re‑implements Load/Save as SD‑card operations, in its own firmware —
+  not the mask ROM.)
 - **PGM 7 — the Nim game.** The eighth `PGM`, and the *only* built‑in stored as
   **Microtronic** code rather than native TMS: its bytecode lives in `3a–3f` (three
   `TCMIY` constants per instruction — stored low‑nibble‑first — `CALL`'d into SRAM

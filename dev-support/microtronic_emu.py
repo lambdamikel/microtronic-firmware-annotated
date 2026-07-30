@@ -83,11 +83,13 @@ class CPU:
         self.sram=[0]*256              # external 2114: 256 slots x 12-bit instruction (true values)
         self.sram_writes=[]            # (slot, value, caller) log
         self.pressed=set()             # held keys, as (colR, kbit)
+        self.din=0                     # 4-bit external digital inputs IN1..IN4 (bit3 = IN4 = 1Hz clock)
     # --- helpers ---
     def get_k(self):
         k=0
-        for colR,bit in self.pressed:
+        for colR,bit in self.pressed:  # keypad: a strobed column exposes its keys' row bits
             if self.R[colR]: k|=(1<<bit)
+        if self.R[6]: k|=self.din      # R6 gates the DIN inputs onto the K bus
         return k
     def m(self): return self.ram[self.x][self.y]
     def setm(self,v): self.ram[self.x][self.y]=v&0xf

@@ -2793,6 +2793,7 @@
 # -----------------------------------------------------------------------------
 # Page 28
 
+    # === 1Hz CLOCK ADVANCE = background timekeeping (found by emulation). Called from the main dispatcher on each NEW 1Hz pulse (the 1Hz signal output must be wired to DIN 4). Advances the BCD software clock in file 4: M(4,0)=sec-units M(4,1)=sec-tens M(4,2)=min-units M(4,3)=min-tens M(4,4)=hr-units M(4,5)=hr-tens, with cascading carry (IMAC+TAM per digit; roll sec1 at 10 via ACxAC 5, sec10 at 6 = 60s via ACxAC 9, etc.). 28:01 SBIT 3 on M(4,6) is the "this pulse already counted" edge-detect latch (so it advances once per pulse, not while DIN4 stays high). This is the same file-4 clock the F06 TIME handler (12:18) copies into RA..RF, and that PGM 3/4 set/show. Verified: toggle DIN4 in dev-support/microtronic_emu.py -> M(4,0) ticks and carries at 10s/60s. ===
     TCY    6        # 28:00 (28:00) 46  -  Y = 6
     SBIT   3        # 28:01 (28:01) 33  -  set bit 3 of M(X,Y)
     BR     05       # 28:02 (28:03) 9f  -  if status: branch to 05
@@ -3347,7 +3348,7 @@
 # -----------------------------------------------------------------------------
 # Page 30
 
-    # === PGM 6 = LOAD-NOP handler (VERIFIED by emulation: press PGM then 6 -> all 256 program slots become F01). An ACxAC command sub-dispatch (30:00-0e) routes to the fill routine: setup at 30:13 seeds the SRAM address pointer M(1,5):M(1,4)=FF, then the loop 30:1f-30 walks that 8-bit address down to 0, writing NOP (F01) into each slot via the SRAM writer at 0c:02 (called from 30:29, returning to 30:2a), until the address wraps. This is the built-in that blanks the program store to NOPs. Confirmed by running the ROM in dev-support/microtronic_emu.py. ===
+    # === PGM 5 (CLEAR-RAM) + PGM 6 (LOAD-NOP) shared handler (VERIFIED by emulation). An ACxAC command sub-dispatch (30:00-0e) selects the fill VALUE, then a shared loop blanks the whole program store: setup at 30:13 seeds the SRAM address pointer M(1,5):M(1,4)=FF, then 30:1f-30 walks that 8-bit address down to 0, writing the fill value into each slot via the SRAM writer at 0c:02 (called from 30:29, returning to 30:2a), until the address wraps. PGM 6 writes F01 (NOP); PGM 5 writes 000. Both confirmed by running the ROM (press PGM then 6/5 -> all 256 slots become F01/000). dev-support/microtronic_emu.py. ===
     TMA             # 30:00 (30:00) 21  -  A = M(X,Y)
     ACxAC  6        # 30:01 (30:01) 76  -  A = A + 6 + 1 (status = carry)
     BR     3b       # 30:02 (30:03) aa  -  if status: branch to 3b
