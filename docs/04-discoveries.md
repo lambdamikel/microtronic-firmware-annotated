@@ -209,52 +209,43 @@ would have removed the need entirely. Elegant design, over‑built access path: 
 hardware and firmware engineers were clearly still learning as they went. It was a
 privilege to take apart either way.
 
-## Known gaps and roadmap
+## Coverage and remaining gaps
 
-This pass mapped the interpreter and the major subsystems, but the annotation is
-uneven — more than half the ROM's pages currently carry only a mechanical,
-per‑instruction decode. Some of that is genuine `0x00` padding that needs nothing;
-some is real substance still to be traced. The main pieces of unfinished work:
+As it stands, **36 of the ROM's 64 pages** carry a high-level banner and/or hand
+annotations (319 semantic notes plus 40 banners, layered over the mechanical
+per-instruction gloss that covers all 4,096 instructions); **28 pages still have
+only that mechanical decode**. The built-in program map is now **complete** - every
+`PGM 0-7` is located, and most are verified by *running the ROM* in the headless
+emulator (`dev-support/microtronic_emu.py`):
 
-- **The seven native `PGM` functions.** The `PGM` key invokes native TMS1600
-  routines. Per the Busch manual: **0** Self‑Test, **1** Load (cassette→RAM),
-  **2** Save (RAM→cassette), **3** Set time of day, **4** Show time of day,
-  **5** Clear RAM (delete programs), **6** Load‑NOP (write `NOP` to every program
-  address). Confirmed anchors so far: the software **clock** that Set/Show‑Time
-  (3/4) read sits behind the `TIME` handler at `12:18` (Jason's "adjacent
-  timekeeping"); Clear‑RAM (5) reuses the `clear RAM file X` subroutine at `00:05`;
-  Load/Save (1/2) add the cassette FSK timing. **Load‑NOP (6) and Clear‑RAM (5) are
-  traced and verified** — they *share* a handler on page `30`: an `ACxAC` sub‑dispatch
-  picks a fill value, then a loop walks the SRAM address `M(1,5):M(1,4)` from `FF` down
-  to `0`, writing it into every slot (writer called from `30:2a`). Confirmed by *running
-  the ROM* in the new headless emulator (`dev-support/microtronic_emu.py`): press `PGM`
-  then `6`/`5` and all 256 slots become `F01` (NOP) / `000`. **The Set/Show‑Time (3/4)
-  infrastructure is also located**: the software clock is `M(4,0..5)` (BCD
-  sec1/sec10/min1/min10/hr1/hr10), advanced by a background routine on page `28` on each
-  1 Hz pulse (the 1 Hz output must be wired to DIN 4), with `M(4,6).3` as the
-  "already‑counted" edge latch — found by toggling DIN 4 in the emulator and watching the
-  digits carry at 10 s / 60 s; it's the same clock the `F06 TIME` handler at `12:18`
-  reads. **Show‑Time (4) is page `27`** (it stages the file‑4 clock into the file‑3 display
-  buffer) and **Self‑Test (0) is page `33`** (lamp test — all four DOT LEDs high — plus a
-  display test that reuses page 27); both verified by running them in the emulator. That
-  **Set‑Time (3) also shares page `27`** with Show‑Time: the `XMA` chain at `27:11‑1e`
-  shifts entered HH:MM digits into the clock (each key -> `M(4,2)`, shifting up), seconds reset
-  — verified in the emulator. **The cassette routines are now located too**: Load (1) = page `23` (FSK bit‑read via the
-  R6‑gated DIN input), Save (2) = page `38` (drives R14/R15 as FSK output) — both a very slow
-  ~14 baud, located and structurally described, though the real‑time FSK timing is only
-  verifiable on real 2095 hardware. **That completes the full built‑in PGM 0–7 map — every
-  one located by running the ROM in the emulator.** (NB: PicoRAM emulates the 2114 program SRAM, not the 2095 cassette, so it does *not*
-  re‑implement PGM 1/2; a separate 2095 emulator handles the tape.)
-- **PGM 7 — the Nim game.** The eighth `PGM`, and the *only* built‑in stored as
-  **Microtronic** code rather than native TMS: its bytecode lives in `3a–3f` (three
-  `TCMIY` constants per instruction — stored low‑nibble‑first — `CALL`'d into SRAM
-  by the loader at `3a:00`, then run by the interpreter). Identified by Decle/Jason,
-  who published a full disassembly; an independent decode here confirms the
-  structure (~66–69 instructions, every branch target in range). A clean in‑repo
-  listing, reconciled against Jason's, is the small remaining task.
-- **~25 pages of native routines** — cassette FSK timing, operand data paths,
-  display and arithmetic helpers — that have a per‑instruction gloss but no
-  high‑level note. Several bear more than mechanical decode.
+| PGM | function | page(s) | how confirmed |
+| --- | --- | --- | --- |
+| 0 | Self-Test | `33` (+`31`) | run: all four DOT LEDs driven high (DOT->DIN loopback) |
+| 1 | Load (cassette->RAM) | `23` | located; FSK format decoded from a real recording |
+| 2 | Save (RAM->cassette) | `38` | located; drives R14/R15, clocked by the 32.768 kHz ref |
+| 3 | Set-Time | `27` | run: entered digits shift into the file-4 clock |
+| 4 | Show-Time | `27` | run: file-4 clock staged to the display buffer |
+| 5 | Clear-RAM | `30` | run: all 256 program slots -> `000` |
+| 6 | Load-NOP | `30` (shared) | run: all 256 program slots -> `F01` |
+| 7 | Nim game | `3a-3f` | Microtronic bytecode; decode matches Jason/the manual |
 
-None of this is hidden; it is simply the part of a 4 KB ROM that a first end‑to‑end
-pass reaches last. It is flagged here so the map's edges are honest.
+The software time-of-day clock (`M(4,0..5)`, advanced on page `28` from the 1 Hz
+DIN-4 pulse) and the 2095 cassette FSK format (`dev-support/cassette_decode.py`) are
+both documented too.
+
+What genuinely remains:
+
+- **28 pages with only a mechanical decode** - operand/arithmetic helpers, F-op
+  continuations, parts of the command state machine, and the Nim bytecode pages
+  (`3c-3f`, explained by the `3a` banner). Several bear more than mechanical decode;
+  this is the long tail of a 4 KB ROM.
+- **The cassette FSK *timing*** (PGM 1/2) is real-time bit-banging clocked by the
+  32.768 kHz reference; the emulator locates and explains the code, but the exact
+  timing runs only on real 2095 hardware. (The *format* itself is confirmed - decoded
+  from a recording.) PicoRAM emulates the 2114 program SRAM, not the 2095 cassette, so
+  it does not re-implement PGM 1/2; a separate 2095 emulator handles the tape.
+- **A clean in-repo Nim listing** (currently cited to Jason's disassembly and the
+  Busch manual rather than rendered here) - a minor nicety.
+
+None of this is hidden; it is the part of a 4 KB ROM that a first end-to-end pass
+reaches last, flagged so the map's edges stay honest.
