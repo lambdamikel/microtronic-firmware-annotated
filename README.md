@@ -58,7 +58,7 @@ a friendly 4‑bit computer into 4 KB of TMS1000‑family microcode.
 | [`docs/`](docs/) | The "theory of operation": the TMS1600 chip, and how the Microtronic VM is built on top of it. |
 | [`annotated/`](annotated/) | The generated annotated listing, plus the annotation source (`annotations.tsv`, `banners.tsv`) it is built from. |
 | [`index.html`](index.html) | A single self-contained **web page** rendering of the whole annotated ROM — colour-coded, searchable, with a page/routine sidebar and clickable cross-references. Live at **[lambdamikel.github.io/microtronic-firmware-annotated](https://lambdamikel.github.io/microtronic-firmware-annotated/)**. |
-| [`dev-support/`](dev-support/) | `build_annotated.py` (text listing) and `build_html.py` (the web page) — both regenerate their output from the canonical disassembly + annotation source. |
+| [`dev-support/`](dev-support/) | `build_annotated.py` (text listing) and `build_html.py` (web page) regenerate their output from the canonical disassembly + annotation source; `gloss.py` is the literal-decode fallback. Also a headless **TMS1600 emulator** (`microtronic_emu.py`) that runs the real ROM (used to verify handlers by execution), and a **2095 cassette WAV decoder** (`cassette_decode.py`). |
 | [`references/`](references/) | Curated links and local copies of the primary sources (Jason's emulator, TI docs). |
 
 The canonical disassembly in `rom/` is **never edited**. Annotations live as data
@@ -118,7 +118,7 @@ the LFSR ordering means and why the two addresses differ.
 - [x] Gather and verify the primary sources (ROM, disassembly, Jason's emulator, TI docs)
 - [x] `docs/01` — TMS1600 host architecture reference
 - [x] Annotation pipeline (`dev-support/build_annotated.py` + `annotated/*.tsv`)
-- [~] `docs/02` — the Microtronic virtual machine (boot done; main loop → decode/dispatch next)
+- [x] `docs/02` — the Microtronic virtual machine (§1–§10 complete, incl. §9 the built‑in `PGM` programs)
 - [x] Annotate: reset & self‑initialisation (pages `0f`, `00`)
 - [x] Annotate: the main interpreter loop and opcode dispatch (run check, fetch, PC advance, operand data path, and the full two‑level opcode→handler map incl. the F‑group)
 - [x] Annotate: 7‑segment display multiplexing (`0d`) and the OPLA segment decode; SRAM write (`0c`)
@@ -126,9 +126,10 @@ the LFSR ordering means and why the two addresses differ.
 - [x] Annotate: external 2114 SRAM read — the instruction fetch (`09:02`), addressing, and the `KL`/`L` data path (writes share the same machinery; covered with keypad/`PGM` entry)
 - [x] Annotate: arithmetic/logic opcodes, the flags (`M(4,13)`), and control flow (`GOTO`/`CALL`/`BRC`/`BRZ`)
 - [x] Annotate: the `F` operations — the full three‑level dispatch and complete `F`‑op → handler map, **plus** deep‑dives on the heavy ops (`HXDZ`/`DZHX` count‑conversion, `RND`, `MULT`/`DIV` via the extended register bank)
-- [x] Annotate: the built‑in `PGM` programs — native self‑test/cassette vs. the demo (Nim) stored in ROM as embedded Microtronic code and loaded to SRAM
+- [x] Locate & **verify all built‑in `PGM 0–7` by *running the ROM*** in a new headless emulator — self‑test (`33`), cassette load/save (`23`/`38`), set/show‑time (`27`), clear‑RAM & load‑NOP (`30`), Nim (`3a–3f`) — plus the 1 Hz software clock (`28`)
+- [x] Tooling: a headless **TMS1600 emulator** (`dev-support/microtronic_emu.py`) that runs the real ROM, and a **2095 cassette WAV decoder** (`dev-support/cassette_decode.py`) — the tape FSK format confirmed by decoding a real recording
 - [x] 100% comment coverage: literal per‑instruction decode (`dev-support/gloss.py`) as a fallback under the hand‑written semantic notes
-- [ ] *Ongoing:* deepen the hand‑written semantic notes on the remaining lightly‑traced pages (chapters 2–3 `PGM`/self‑test/cassette internals)
+- [ ] *Ongoing:* deepen the semantic notes on the 28 pages that still carry only a mechanical decode (operand/arithmetic helpers, F‑op continuations); render a clean in‑repo Nim listing
 
 ## Provenance, credit, and permissions
 
