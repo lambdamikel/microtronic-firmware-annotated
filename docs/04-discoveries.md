@@ -216,8 +216,11 @@ some is real substance still to be traced. The main pieces of unfinished work:
   display test that reuses page 27); both verified by running them in the emulator. That
   **Set‑Time (3) also shares page `27`** with Show‑Time: the `XMA` chain at `27:11‑1e`
   shifts entered HH:MM digits into the clock (each key -> `M(4,2)`, shifting up), seconds reset
-  — verified in the emulator. That leaves only the **cassette routines (1/2)** — the real‑time
-  FSK ones, which a headless non‑cycle‑accurate emulator can locate but not fully time‑verify. (PicoRAM re‑implements
+  — verified in the emulator. **The cassette routines are now located too**: Load (1) = page `23` (FSK bit‑read via the
+  R6‑gated DIN input), Save (2) = page `38` (drives R14/R15 as FSK output) — both a very slow
+  ~14 baud, located and structurally described, though the real‑time FSK timing is only
+  verifiable on real 2095 hardware. **That completes the full built‑in PGM 0–7 map — every
+  one located by running the ROM in the emulator.** (PicoRAM re‑implements
   Load/Save as SD‑card operations, in its own firmware — not the mask ROM.)
 - **PGM 7 — the Nim game.** The eighth `PGM`, and the *only* built‑in stored as
   **Microtronic** code rather than native TMS: its bytecode lives in `3a–3f` (three
