@@ -206,6 +206,8 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <a href="#L0020" class="navrt"><span class="navaddr">00:20</span>Keypad / input handling</a>
 <a href="#L0100" class="navrt"><span class="navaddr">01:00</span>KEYPAD MATRIX SCAN</a>
 <a href="#L0500" class="navrt"><span class="navaddr">05:00</span>Halted-mode command handling</a>
+<a href="#L0600" class="navrt"><span class="navaddr">06:00</span>Command-mode state machine</a>
+<a href="#L0700" class="navrt"><span class="navaddr">07:00</span>Command-mode state machine, continued</a>
 <a href="#L0802" class="navrt"><span class="navaddr">08:02</span>EXECUTE-INSTRUCTION entry: advance the progr…</a>
 <a href="#L0902" class="navrt"><span class="navaddr">09:02</span>EXTERNAL 2114 SRAM READ</a>
 <a href="#L0923" class="navrt"><span class="navaddr">09:23</span>Helper: one&#x27;s-complement a nibble</a>
@@ -638,6 +640,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L053f" data-a="0" data-s="05:3f mnea  (unused — 0x00 fill)"><a class="addr" href="#L053f">05:3f</a><span class="hex">00</span><span class="pad">MNEA</span><span class="cm gloss">(unused — 0x00 fill)</span></div>
 </section>
 <section class="page"><h2 id="P06">Page 06<span class="cp">chapter 0 · page 6</span></h2>
+<div class="banner">Command-mode state machine (part of the halted-mode / PGM command path; specific role still being traced). Tests mode/state bits in file 0 and branches among sub-handlers across several pages, setting/clearing mode flags. Works with pages 05 and 07.</div>
 <div class="row" id="L0600" data-a="0" data-s="06:00 ldp 0 page-buffer = 0 (arm the next branch/call to page 0)"><a class="addr" href="#L0600">06:00</a><span class="hex">10</span><span class="flow">LDP</span><span class="op">0</span><span class="cm gloss">page-buffer = 0 (arm the next branch/call to page 0)</span></div>
 <div class="row" id="L0601" data-a="0" data-s="06:01 br 00 if status: branch to 00"><a class="addr" href="#L0601">06:01</a><span class="hex">80</span><span class="flow">BR</span><span class="op">00</span><span class="cm gloss">if status: branch to 00</span></div>
 <div class="row" id="L0602" data-a="0" data-s="06:02 tcy 6 y = 6"><a class="addr" href="#L0602">06:02</a><span class="hex">46</span><span class="mn">TCY</span><span class="op">6</span><span class="cm gloss">Y = 6</span></div>
@@ -704,6 +707,7 @@ footer { color:var(--dim); font-size:12px; text-align:center; padding:30px 20px 
 <div class="row" id="L063f" data-a="0" data-s="06:3f br 2e if status: branch to 2e"><a class="addr" href="#L063f">06:3f</a><span class="hex">88</span><span class="flow">BR</span><span class="op">2e</span><span class="cm gloss">if status: branch to 2e</span></div>
 </section>
 <section class="page"><h2 id="P07">Page 07<span class="cp">chapter 0 · page 7</span></h2>
+<div class="banner">Command-mode state machine, continued (role still being traced). Tests mode bits M(0,f).0-3 (and M(0,8)) and dispatches to per-mode sub-handlers on several pages; also seeds program/state cells via TCMIY. Part of the command handling with pages 05-06.</div>
 <div class="row" id="L0700" data-a="0" data-s="07:00 ldp 0 page-buffer = 0 (arm the next branch/call to page 0)"><a class="addr" href="#L0700">07:00</a><span class="hex">10</span><span class="flow">LDP</span><span class="op">0</span><span class="cm gloss">page-buffer = 0 (arm the next branch/call to page 0)</span></div>
 <div class="row" id="L0701" data-a="0" data-s="07:01 br 00 if status: branch to 00"><a class="addr" href="#L0701">07:01</a><span class="hex">80</span><span class="flow">BR</span><span class="op">00</span><span class="cm gloss">if status: branch to 00</span></div>
 <div class="row" id="L0702" data-a="0" data-s="07:02 tcy 3 y = 3"><a class="addr" href="#L0702">07:02</a><span class="hex">4c</span><span class="mn">TCY</span><span class="op">3</span><span class="cm gloss">Y = 3</span></div>

@@ -423,6 +423,7 @@
 # -----------------------------------------------------------------------------
 # Page 06
 
+    # === Command-mode state machine (part of the halted-mode / PGM command path; specific role still being traced). Tests mode/state bits in file 0 and branches among sub-handlers across several pages, setting/clearing mode flags. Works with pages 05 and 07. ===
     LDP    0        # 06:00 (06:00) 10  -  page-buffer = 0 (arm the next branch/call to page 0)
     BR     00       # 06:01 (06:01) 80  -  if status: branch to 00
     TCY    6        # 06:02 (06:03) 46  -  Y = 6
@@ -492,6 +493,7 @@
 # -----------------------------------------------------------------------------
 # Page 07
 
+    # === Command-mode state machine, continued (role still being traced). Tests mode bits M(0,f).0-3 (and M(0,8)) and dispatches to per-mode sub-handlers on several pages; also seeds program/state cells via TCMIY. Part of the command handling with pages 05-06. ===
     LDP    0        # 07:00 (07:00) 10  -  page-buffer = 0 (arm the next branch/call to page 0)
     BR     00       # 07:01 (07:01) 80  -  if status: branch to 00
     TCY    3        # 07:02 (07:03) 4c  -  Y = 3
