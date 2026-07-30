@@ -370,3 +370,11 @@
 3a:01	bump the SRAM write pointer (increment; carry into the high nibble)
 3a:0a	embedded program begins: each TCMIY triple = one Microtronic instruction (its 3 hex digits); CALL 00 stores it to SRAM
 3b:00	embedded Microtronic program (continued): three TCMIY constants per instruction, each followed by a CALL to the loader (3a:00)
+
+# ----- cassette LOAD (page 23) / SAVE (page 38): FSK read/write timed by the 32.768kHz reference -----
+23:00	TAPE-INPUT SAMPLER (LOAD): SETR R6 gates the DIN lines onto the K bus, TKA reads them (the tape signal + a timing-reference bit), RSTR R6. Called over and over; by timing the input transitions against the reference it classifies the incoming tone -> 568Hz=bit 0, 1136Hz=bit 1, 2272Hz=leader/sync/end.
+23:02	TKA: read the tape signal off a DIN input (gated by R6). A second DIN bit carries the 32.768kHz-derived timing reference used to measure the tone period.
+38:08	SAVE dispatch: branch on the phase/symbol counter in M(4,e) to emit the next element at the right frequency - leader/sync/end (2272Hz) or a data bit (568Hz for 0, 1136Hz for 1); the three tones stand in a 1:2:4 ratio, so only their ratio need be right.
+38:28	TONE HALF-CYCLE (high half): drive the tape output lines R14/R15 HIGH, then poll the timing-reference bit on DIN (read at 38:2e) until it flips; 38:35 then drives them LOW. Each half-period is clocked by the 32.768kHz-derived crystal reference, NOT the CPU - which is exactly why the tape bit timing is precise and machine-independent (see the 'one crystal, two jobs' note in docs/04).
+38:2e	TKA: read the 32.768kHz-derived timing reference on a DIN line (via the R6 gate). Polling this bit is what clocks each tone half-cycle - the crystal, not the rubbery RC CPU clock, sets the tape timing.
+38:35	end of the tone half-cycle: drive the tape output lines R14/R15 LOW (the low half, mirror of 38:28).

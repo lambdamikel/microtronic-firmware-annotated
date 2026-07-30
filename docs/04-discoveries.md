@@ -105,6 +105,29 @@ digit‑strobes double as the five keypad column‑strobes. Nothing in this desi
 exactly one job; the whole thing is a careful time‑sharing dance across a handful
 of pins.
 
+**One crystal does the clock *and* the tape.** The TMS1600's main oscillator is an
+RC clock that drifts (≈500–675 kHz between machines), so it cannot time anything
+that has to be *interchangeable* between units. The cassette interface solves this
+with a **32.768 kHz crystal** (2¹⁵ Hz), and the tape format's own numbers give it
+away — every cassette timing is a binary division of that crystal:
+
+| quantity | tape value | crystal ticks |
+| --- | --- | --- |
+| one bit cell | 62.5 ms | **2048 / 32768** |
+| sync pulse | 31.25 ms | 1024 / 32768 |
+| end tone | 1 s | 32768 / 32768 |
+
+So on **SAVE** the firmware clocks out each bit for exactly 2048 ticks, and on
+**LOAD** it slices the incoming stream on the same grid — independent of its own
+rubbery CPU clock, which is why a tape written on one Microtronic reads on another.
+The *tones* (568 : 1136 : 2272 Hz — a clean **1 : 2 : 4** ratio) don't need the
+crystal at all: the decoder keys on the period *ratio*, not absolute pitch, so the
+RC‑generated frequencies can drift freely. And the same crystal ÷2¹⁵ is the **1 Hz
+tick** that drives the software time‑of‑day clock (§the page‑28 advance, fed in on
+DIN 4). One crystal, two jobs: the real‑time clock and the tape timebase. (Format
+courtesy of Ingo D. Rullhusen's `mic2wav`/`wav2mic`, confirmed by decoding a real
+recording; see `dev-support/cassette_decode.py`.)
+
 ## The surprises
 
 **The program counter doesn't count.** It's a linear‑feedback shift register, so
